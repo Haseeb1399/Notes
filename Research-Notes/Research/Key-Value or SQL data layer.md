@@ -28,6 +28,8 @@ Queries:
 	
 3. Select col2 from table1 where col1 = 10
 	1. First send Get request to Waffle A for Col1|10, parse out the keys, and send get_batch to Waffle B
+4. Select col1 from table1 where 10<=col1<20 (between 10 and 20):
+	1. Assuming we have the Range Tree construction in proxy, we traverse it and find the keys for Waffle A. We then issue the keys to Waffle A, get the doc_ids for Waffle B. Fetch records from Waffle B. 
 
 *Insert:*
 1. Insert into table1 (col1,col2,col3) values (x,y,z)
@@ -74,6 +76,10 @@ abc |x|y|z
 	2. Response_keys + Dummy_Keys + (F_r Keys) using BST = key_array
 	3. Send to server: Select Col2 from table1 where col1 in key_array
 	4. Follow Waffle protocol (Save in Cache, delete from server, write back)
+4. Select col1 from table1 where 10<=col1<20 (between 10 and 20):
+	1. Assuming we have the BST for URS/BRC on proxy, find the keys for Waffle A. Send it a request
+	2. Parse out doc_ids for Waffle B. Send a select col2 from table1 where id in(range)
+
 
 *Insert:*
 1. Insert into table1 (col1,col2,col3) values (x,y,z)
@@ -105,6 +111,9 @@ abc |x|y|z
 
 		Obviously dummy_keys and F_R are added to key_array_table1 
 
+
+Note:
+Waffle A can be a Key/Value store like Redis, or it can be a simple mysql table called index with id:value mapping and then Get would just be select val from index where id = (id) or range of ids. 
 
 
 
