@@ -1,0 +1,35 @@
+{
+	"nodes":[
+		{"id":"8a9277c692ad8f9f","type":"group","x":-520,"y":-600,"width":692,"height":350,"label":"Client "},
+		{"id":"d2de250a6d3f986c","type":"text","text":"## User","x":-140,"y":-530,"width":250,"height":60},
+		{"id":"6d001d1162eeb287","type":"text","text":"Interface: \n`process_request(sql_query:text)`","x":-182,"y":-330,"width":334,"height":60},
+		{"id":"f20b9e806fbe9784","type":"text","text":"Init (Connect to Proxy)","x":-500,"y":-580,"width":250,"height":50},
+		{"id":"b7350a04c9175b68","type":"text","text":"Start Delete Thread","x":-752,"y":-89,"width":250,"height":59},
+		{"id":"e651d8f43b357c88","type":"text","text":"Init:\n1. establish mysql conn\n2. Start listening","x":-692,"y":110,"width":260,"height":120},
+		{"id":"cfddce470695960e","type":"text","text":"Proxy-Service","x":-432,"y":-30,"width":250,"height":60},
+		{"id":"e7b235f2c4419ae8","type":"text","text":"Interface: \n`process_request(sql_query:text)`","x":322,"y":110,"width":334,"height":60},
+		{"id":"df9fe0a2ecc805c9","type":"text","text":"Parse Query:\n`parse(sql_query)`","x":363,"y":289,"width":250,"height":60},
+		{"id":"3c1b0a025a6e0c3a","type":"text","text":"Delete","x":962,"y":319,"width":250,"height":60},
+		{"id":"60f470e8621d1e4d","type":"text","text":"Update","x":942,"y":565,"width":250,"height":50},
+		{"id":"7d1ba2392263f6b4","x":582,"y":590,"width":250,"height":60,"type":"text","text":"Insert"},
+		{"id":"11e3d46f4b665f1b","type":"text","text":"Select","x":107,"y":565,"width":250,"height":60},
+		{"id":"d5507d524ced462d","type":"text","text":"Join","x":357,"y":830,"width":250,"height":60},
+		{"id":"9fad44428ec6f9e3","x":-98,"y":830,"width":250,"height":60,"type":"text","text":"Range"},
+		{"id":"d2464ded67d2082e","x":-675,"y":379,"width":227,"height":81,"type":"text","text":"Table Level Cache"},
+		{"id":"2a9303c0da5b662b","x":-692,"y":538,"width":385,"height":322,"type":"text","text":"Search Trees:\n\n1. BST for each table.\n2. BST for each tables dummy objects\n3. Range BST for Range indexes. "}
+	],
+	"edges":[
+		{"id":"e4a6d37e72bbe971","fromNode":"d2de250a6d3f986c","fromSide":"bottom","toNode":"6d001d1162eeb287","toSide":"top","label":"Calls"},
+		{"id":"cf68c188a690ad53","fromNode":"d2de250a6d3f986c","fromSide":"left","toNode":"f20b9e806fbe9784","toSide":"right"},
+		{"id":"a7d464900cdb84ff","fromNode":"6d001d1162eeb287","fromSide":"bottom","toNode":"e7b235f2c4419ae8","toSide":"top"},
+		{"id":"437f9b19f348a742","fromNode":"cfddce470695960e","fromSide":"bottom","toNode":"e651d8f43b357c88","toSide":"top"},
+		{"id":"ae4ca9fc52a4a31e","fromNode":"cfddce470695960e","fromSide":"left","toNode":"b7350a04c9175b68","toSide":"right"},
+		{"id":"3126dd6c80608f70","fromNode":"e7b235f2c4419ae8","fromSide":"bottom","toNode":"df9fe0a2ecc805c9","toSide":"top"},
+		{"id":"d4ccb22d2dba82a3","fromNode":"df9fe0a2ecc805c9","fromSide":"bottom","toNode":"11e3d46f4b665f1b","toSide":"top"},
+		{"id":"b6beb78efb1e96dc","fromNode":"df9fe0a2ecc805c9","fromSide":"bottom","toNode":"60f470e8621d1e4d","toSide":"top"},
+		{"id":"41d824e9153c5be5","fromNode":"df9fe0a2ecc805c9","fromSide":"right","toNode":"3c1b0a025a6e0c3a","toSide":"left"},
+		{"id":"3f97a4b49940e09d","fromNode":"df9fe0a2ecc805c9","fromSide":"bottom","toNode":"7d1ba2392263f6b4","toSide":"top"},
+		{"id":"d9bc089f1fceae94","fromNode":"11e3d46f4b665f1b","fromSide":"bottom","toNode":"d5507d524ced462d","toSide":"top"},
+		{"id":"2b633858bdc39909","fromNode":"11e3d46f4b665f1b","fromSide":"bottom","toNode":"9fad44428ec6f9e3","toSide":"top"}
+	]
+}
