@@ -113,8 +113,9 @@ abc |x|y|z
 
 
 Note:
-Waffle A can be a Key/Value store like Redis, or it can be a simple mysql table called index with id:value mapping and then Get would just be select val from index where id = (id) or range of ids. 
+* Waffle A can be a Key/Value store like Redis, or it can be a simple mysql table called index with id:value mapping and then Get would just be select val from index where id = (id) or range of ids. 
 
+* 
 
 
 Benchmarking:
@@ -132,3 +133,6 @@ SEAL: Uses TPC-H, but do not provide evaluation for group-by queries. So I think
 * Do we do something similar to ObliDB and create a subset out of a benchmark and test against that. 
 
 * What about nested queries? A lot of TPC-H is nested queries. 
+
+
+
