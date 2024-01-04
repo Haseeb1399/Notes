@@ -4,31 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "b7e49a30b4efdc95",
+        "id": "f71f0fc6fe8952b9",
         "type": "tabs",
         "children": [
           {
-            "id": "bb7f5b212b13f98a",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Research/Query Flow.canvas",
-                "viewState": {
-                  "x": 29.5,
-                  "y": 760,
-                  "zoom": -1.6191164978052945
-                }
-              }
-            }
-          },
-          {
-            "id": "d4910b54293508ed",
+            "id": "094348039e53c84e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Research/Key-Value or SQL data layer.md",
+                "file": "Research/Segment Tree.md",
                 "mode": "source",
                 "source": false
               }
@@ -100,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/Query Flow.canvas",
+                "file": "Research/Segment Tree.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -117,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/Query Flow.canvas",
+                "file": "Research/Segment Tree.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -140,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Research/Query Flow.canvas"
+                "file": "Research/Segment Tree.md"
               }
             }
           },
@@ -169,14 +154,16 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "bb7f5b212b13f98a",
+  "active": "094348039e53c84e",
   "lastOpenFiles": [
-    "Research/Practical Private Range Search Revisited.md",
+    "Research/French Toast.md",
+    "Research/Segment Tree.md",
     "Research/Notes.md",
+    "Research/Query Flow.canvas",
+    "Research/Practical Private Range Search Revisited.md",
     "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
     "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Research/Key-Value or SQL data layer.md",
-    "Research/Query Flow.canvas",
     "Research/Arx.md",
     "Images/Pasted image 20231218201510.png",
     "Images/Pasted image 20231218201510 1.png",
