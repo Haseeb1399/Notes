@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Research/Segment Tree.md",
+                "file": "Research/French Toast.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/Segment Tree.md",
+                "file": "Research/French Toast.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/Segment Tree.md",
+                "file": "Research/French Toast.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Research/Segment Tree.md"
+                "file": "Research/French Toast.md"
               }
             }
           },
@@ -156,9 +156,11 @@
   },
   "active": "094348039e53c84e",
   "lastOpenFiles": [
-    "Research/French Toast.md",
-    "Research/Segment Tree.md",
     "Research/Notes.md",
+    "Research/SSE.md",
+    "Research/Waffle.md",
+    "Research/Segment Tree.md",
+    "Research/French Toast.md",
     "Research/Query Flow.canvas",
     "Research/Practical Private Range Search Revisited.md",
     "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
@@ -170,7 +172,6 @@
     "Images/Pasted image 20231022213859.png",
     "conflict-files-obsidian-git.md",
     "Research/Practical and Secure Substring Search.md",
-    "Research/Range Search over Encrypted Multi-Attribute Data.md",
-    "Research/Waffle.md"
+    "Research/Range Search over Encrypted Multi-Attribute Data.md"
   ]
 }
