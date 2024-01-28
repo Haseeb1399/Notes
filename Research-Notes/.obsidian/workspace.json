@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
+                "file": "Research/Meeting Notes.md",
                 "mode": "source",
                 "source": false
               }
@@ -69,7 +69,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -85,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
+                "file": "Research/Meeting Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +103,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
+                "file": "Research/Meeting Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md"
+                "file": "Research/Meeting Notes.md"
               }
             }
           },
@@ -137,8 +138,7 @@
               "state": {}
             }
           }
-        ],
-        "currentTab": 4
+        ]
       }
     ],
     "direction": "horizontal",
@@ -156,16 +156,23 @@
   },
   "active": "b32a1363780cdbe7",
   "lastOpenFiles": [
+    "Pasted image 20240126101843.png",
+    "Pasted image 20240125220633.png",
     "Winter 2024/CS798 - Multicore Programming.md",
-    "Research/Query Flow.canvas",
+    "Research/Meeting Notes.md",
+    "Pasted image 20240125155357.png",
+    "Pasted image 20240125155037.png",
+    "Research/Notes.md",
+    "Research/Existing SQL databases using KV stores.md",
     "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Research/French Toast.md",
+    "Research/Key-Value or SQL data layer.md",
+    "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Research/MySQL Backend.canvas",
-    "Research/Notes.md",
+    "Research/Query Flow.canvas",
     "Research/VEIL.md",
     "Winter 2024",
     "Research/Segment Tree.md",
-    "Research/Key-Value or SQL data layer.md",
     "Research/Practical and Secure Substring Search.md",
     "Research/Practical Private Range Search Revisited.md",
     "Research/Range Search over Encrypted Multi-Attribute Data.md",

@@ -1,4 +1,4 @@
-
+![[Existing SQL databases using KV stores]]
 ### Goal: 
 
 Design a new relational (SQL) database system that protects against access pattern and volume-based attacks in the Client-Server data storage model. The client should be able to do updates to the database (we don't want a static database) and We want to allow the user of this system to modify and change security parameters according to their requirement.  The database should be performant and have reasonable throughput with support for concurrent users (connected to a proxy). To this extent, we use Waffle as a foundation for hiding access patterns and volume when fetching or writing data to an external server. The system should support a variety of SQL queries such as Select, Insert, Update, Join, and Where. We also need to support range queries over numeric data. Our main contribution is to produce a relational database system that: 
