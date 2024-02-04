@@ -119,3 +119,23 @@ How many partition you create, you need to balance the size.
 1) Think about experiment, (Simple as you can)
 2) Think about partitioning the tables from one monolithic map (N=0) to N= some M where there are M partitions. The size of each partition needs to be the same. 
 
+<hr>
+
+## Feb 2nd 
+
+1) Index sizes --> Real world Workloads and their associated Indexes
+	1) TPC-C 
+	2) Chicago Crime Dataset 
+	3) Health Care Dataset
+	4) Deploy to CRDB, make index and then check size (on diff index values)
+2) Meta Proxy --> Data Proxy --> Partitions
+3) Monolithic Index, What can we do about it? 
+	1) Make a new partition for index as well, Think about that too.
+
+
+
+
+Segmenting between topics. 
+Complete something | Pause for people to digest| 
+
+Think about something, Take a pause and then think about what your going to say. 
