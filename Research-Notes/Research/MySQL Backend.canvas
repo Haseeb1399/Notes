@@ -1,11 +1,6 @@
 {
 	"nodes":[
-		{"id":"9da1ad9c8eab0bd2","type":"text","text":"Clients","x":-180,"y":-400,"width":250,"height":60},
-		{"id":"97495f966874326d","type":"text","text":"Proxy","x":-180,"y":-280,"width":250,"height":60},
-		{"id":"33febe98d8fcb297","type":"text","text":"MySQL","x":-180,"y":-160,"width":250,"height":60}
+		{"id":"a228ecb43fb0af1b","type":"text","text":"Clients","x":-160,"y":-480,"width":119,"height":50}
 	],
-	"edges":[
-		{"id":"16d41f7bbdf3596c","fromNode":"9da1ad9c8eab0bd2","fromSide":"bottom","toNode":"97495f966874326d","toSide":"top"},
-		{"id":"22d66bc89c3b4c2e","fromNode":"97495f966874326d","fromSide":"bottom","toNode":"33febe98d8fcb297","toSide":"top"}
-	]
+	"edges":[]
 }
