@@ -1,0 +1,25 @@
+{
+	"nodes":[
+		{"id":"3a8b7eac23640272","type":"group","x":-600,"y":-520,"width":1020,"height":560,"label":"Proxy"},
+		{"id":"ac1ec68d5c82505f","type":"text","text":"Clients","x":-240,"y":-780,"width":250,"height":60},
+		{"id":"841e5425924d1d0b","type":"text","text":"Parser","x":-220,"y":-500,"width":250,"height":61},
+		{"id":"ebefb05c7e775e67","type":"text","text":"Executor 1","x":-520,"y":-80,"width":250,"height":60},
+		{"id":"48f740d11e0be4a4","type":"text","text":"Executor 2","x":-220,"y":-80,"width":250,"height":60},
+		{"id":"1def6aaa65b19c11","type":"text","text":"Executor 3","x":100,"y":-80,"width":250,"height":60},
+		{"id":"c569744a9c3c7d0d","type":"text","text":"Redis Cluster","x":-240,"y":200,"width":250,"height":60},
+		{"id":"c7c3b3ff0c84c3cf","type":"text","text":"Load Balancer","x":-220,"y":-240,"width":250,"height":50},
+		{"id":"8075407f8e7c533a","type":"text","text":"Metadata","x":-560,"y":-420,"width":250,"height":60},
+		{"id":"e9acac8f41ff1a30","type":"text","text":"Indexer/Query Resolver","x":-220,"y":-390,"width":250,"height":90}
+	],
+	"edges":[
+		{"id":"30e226853510b820","fromNode":"ac1ec68d5c82505f","fromSide":"bottom","toNode":"3a8b7eac23640272","toSide":"top"},
+		{"id":"da134ed18b073efe","fromNode":"3a8b7eac23640272","fromSide":"bottom","toNode":"c569744a9c3c7d0d","toSide":"top"},
+		{"id":"1168996aee25b425","fromNode":"c7c3b3ff0c84c3cf","fromSide":"bottom","toNode":"ebefb05c7e775e67","toSide":"top"},
+		{"id":"41288496b03979b8","fromNode":"c7c3b3ff0c84c3cf","fromSide":"bottom","toNode":"48f740d11e0be4a4","toSide":"top"},
+		{"id":"2ec1549f3090522b","fromNode":"c7c3b3ff0c84c3cf","fromSide":"bottom","toNode":"1def6aaa65b19c11","toSide":"top"},
+		{"id":"577c6881c5f63ee4","fromNode":"841e5425924d1d0b","fromSide":"bottom","toNode":"e9acac8f41ff1a30","toSide":"top"},
+		{"id":"f9e2d46ed21dc2e1","fromNode":"e9acac8f41ff1a30","fromSide":"left","toNode":"8075407f8e7c533a","toSide":"right"},
+		{"id":"d3fdd4a2cb1b849e","fromNode":"e9acac8f41ff1a30","fromSide":"bottom","toNode":"c7c3b3ff0c84c3cf","toSide":"top"},
+		{"id":"fb792a7657206145","fromNode":"8075407f8e7c533a","fromSide":"bottom","toNode":"e9acac8f41ff1a30","toSide":"left"}
+	]
+}

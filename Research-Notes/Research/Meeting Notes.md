@@ -342,6 +342,8 @@ So each time you read a different dummy value and write a different dummy value.
 **Haven't Covered Updates**
 
 
+##### Tasks: 
+
 $d/f_d$ = $N-C/B+F_R$ --> Basically see how to calculate d with the above technique, 
 
 Aggregate batch from each executor into one large so server sees one batch together. 
@@ -359,3 +361,667 @@ Distributed Proxy system
 Index is separate and then think about load balancing the system. 
 
 Underlying problem: When we partition state across proxies, we don't want one to make 60 accesses (while still maintaing alpha/3) while other proxy is still lagging behind. 
+
+
+
+## Feb 23 
+
+### Coordinator Node
+#### Case 1: Independent Indexing (Separate Waffle)
+![[Pasted image 20240222223432.png]]
+
+**Issue**: In the previous design, the executor nodes could out-run (out-pace) each other. This can cause issues with the $\alpha$ guarantees we want to provide. For example, if executor three is on its third batch of queries and executor one is still collecting requests for its 1st batch, then overall the server has seen 3 accesses. Executor one only guarantees alpha from its own perspective (I guarantee that I will access each object within $\alpha$ accesses **I** make).
+
+**Potential Solution**: 
+
+1) Introduce a coordinator node that "collects" queries for each executor node. It then issues these queries to each executor together. Basically it "batches" the queries before they are sent to be executed. 
+2) The coordinator will maintain a queue per executor node of size $B - F_d-F_r$
+	* B is the batch size set for the executor. 
+	* Fake queries on Dummy objects will be added by the executor itself. Fake queries on real objects will also be added by the executor as well. 
+	* Thus coordinator checks: `SizeOfEachQueue >= R`. It will then dequeue $R$ requests and send it to corresponding executor. 
+
+3) Steps for Processing a Request: 
+	1) Clients send request to Coordinator.
+	2) Coordinator Asks Index to provide doc_ids for requested items.(Using Indexes or Join Maps).
+	3) Coordinator assigns key to its designated queue (Hash(doc_id)). 
+	4) Checks if all Queues are filled to $B-F_d-F_r$. If so, Dequeue and send doc_ids to executor. 
+	5) Executor fetches documents and returns the values to the coordinator. 
+
+
+#### Case 2: Integrated Indexing (Index stored on the partitions)
+
+
+![[Pasted image 20240222232706.png]]
+
+In this approach, the "index" is a separate process that is responsible for maintaining the Point and Range BSTs for indexes columns (across all tables) along with Join Maps. We can think of this as the Index oracle that provides the information needed to access the index values. For example:
+
+1) Select * from Table1 where Age = 10;
+	* Coordinator calls `getPoint(Table=Table1,Col=Age,Value=10)`, the interface exposed by the Index process. 
+	* The Index process in this case returns `KEY|PARTITION'. 
+	* In this case, partition information would need to be stored for the index value as well. 
+	* The Coordinator will then call `Hash(key)` and insert it in that executors queue. 
+	* Executor fetches values Coordinator adds back again to each executors queue. 
+2) Select * from Table2 where Age Between 10 and 20; 
+	* Coordinator calls `getRange(Table=Table2,Col=Age,MIN=10,MAX=20)`
+	*  Index returns a list: `[(10|PARTITION),(11|PARTITION)...]`
+	*  Same process follows as above. 
+
+In this case, the binning process (Assigning Which executor proxy handles which keys) needs to be come after creating indexes. So we have the total key space (index Keys and Data Keys) to map to executor proxies. 
+
+
+Deleting Items? 
+
+1) Case where we delete all values of Age=10. 
+	* Index process can delete the key out of its bst (mark it for example).
+	* The key still resides in the executor proxy BST. For example key is: table1_age_10. 
+	* Can we introduces a background tasks that deletes these nodes from BST?
+
+
+
+Open Questions: 
+
+1) How much of a bottleneck is the coordinator? 
+	1) What if popular key resides only on Executor 3? It is likely cached but we can't access it until rest of the queues fill up. Will this be a large bottleneck? Can incorrect mapping or distribution lead to starvation? The integrated index might help with this problem since the index of a popular item lies on a different partition (hence executor). 
+2) Should our partitioning be probabilistic or deterministic? The issue(?) I could think of with probabilistic approach is that we can't control how keys map to partitions. Lets say: 
+	* Randomly all keys that Executor 1 got were in Partition 1. 
+	* Executor 1 wouldn't need to access Partition 2 or 3. Where as Partition 2 and 3 might access Partition 1. 
+	* If we think of the outsourced space a physically one unit, then it still looks like 3 machines accessing a single data server. The logical separation exists in the key spaces the executors access. 
+	* But if we have physically distinct machines, then partition 1 got (3) access from distinct machines where as partition 2 and 3 got (2) accesses. Doesn't this affect Alpha for partition 1? (Proxy guaranteed Alpha < Alpha Server Sees). Can a deterministic approach to partitioning keys help (all partitions accessed each time).  
+3) A possible solution for the bottleneck is to have timeouts.
+	* Instead of adding Dummy keys, we let the executor know of the timeout and the executor fills in the batch with $F_r$. This way our $\alpha$ for that batch would be lower than the upper bound set by the default parameters. 
+	* This can potentially cause a difference between the $\alpha$ histograms of the server accesses. The server coupled with an executor experiencing more timeouts would have a less tail heavy distribution, where as a normal executor would have a tail heavy distribution. 
+	* The difference in these graphs/across partitions can leak information about where popular keys reside? 
+	* Trade off: Improve performance, but leak more information? 
+
+* Think of keyspace as a since large keyspace. 
+* Each executor guarantees $\alpha'$  where as server sees $\alpha =3\alpha'$  where 3 is the number of partitions/executor nodes. 
+* Batching over time intervals/epochs, just duplicate keys until it reaches R
+* Coordinator needs to be as dumb as possible
+* Integrated Index
+* 1-N Index for recreating.
+
+
+## March 1
+
+#### Arx Index Planning
+
+Assumption: We have input a set of query patterns. 
+Index planning also needs to know indices already built (regular indices) to guarantee same asymptotic performance. 
+
+Needed because no direct map from regular indices --> Arx Indices 
+Arx's Indices introduce constraints:
+	1) A regular Index can server for both range and equality queries. Not true for Arx. Different index for different operations. 
+	2) ArxEQ index on (a,b) cannot be used to compute equality on just a. It performs a complete match. 
+		1) Map --> Distinct values of Age to Count. So here it would be distinct pairs of (a,b) --> Count. 
+	3) A range or order by limit on a sensitive field can only be computed using an ArxRange index. It can no longer be computer after applying a separate index. I don't know why? 
+
+Admin can also explicitly specify certain fields to be non-sensitive and also declare compound indices on mix of sensitive and non-sensitive fields. Queries can have sensitive and non-sensitive fields in the where clause. 
+
+Example, admin says build index on a. 
+Does query: `where a = and s>` where s is sensitive. 
+
+Admin expects the db will first filter by a and then by s. 
+
+In naive solution, the system could create a ArxRange on s alone, then the db will first filter by S and then filter by A. Index on A would be then useless. It needs to run ArxRange on S because its a constraint by the system that range queries need to be done by ArxRange. I think you can't perform it after applying another index because that might leak information? I'm not sure. 
+
+In order to improve performance, Arx builds a composite index ArxRange on (a,s)
+
+The planner basically Zips the indexes so that they perform similarly to the regular db indices. 
+
+Not much help in our case.  We don't require query patterns. Just what indices to make. 
+
+
+
+#### SQL mapping 
+
+For the integrates Index: 
+MetaData present: Table Names, Table Columns, Index Columns,  Join Maps
+
+PK is assigned from 1 - N. Keep record of PK range where a table resides (T1 resides from 20-100)
+
+Initialization: The tables rows and columns are converted to Key/Value pairs. So if we have a table with N rows and X Columns, we will have: 
+	1) $N*X$ key/value pairs. 
+	2) Each Key would be of the form `Table_Name/Col/Pk`
+
+For each point index we create, the # of records per index would be: 
+	1) UNIQUE(Col_Values) 
+
+For range index we create, the # of records per index would be:
+	1) # of valid ranges (10-20, 20-30, 30-40) for each value
+	2) n log (n) rows in case we want to issue 1 index fetch.
+	3) # of valid ranges in case we want multiple index fetches. 
+
+1) Point Queries:
+	* `Select * from t1 where age = 10`
+		* Index is created as Key = `table_name/col/val` so in this case it would be `t1/age/10`. The value for this would be the list of doc_ids/pk of t1 where age is 10. The coordinator simply constructs the key after doing a sanity check that an index exists. After receiving pk from index, the server can construct keys for the table `t1/<col>/pk` and issue these to the appropriate executor. 
+	* `Select col1 from t1 where age=10`
+		* Same as above, but instead of issuing request for every col, only done for age col. 
+	* `Select * from t1`:
+		* Using the PK range for t1, you can issue a query for all values. 
+
+2) Ranger Queries: 
+	- Also see if we can just convert to range query. 
+	At index creation time, construct a segment tree (interval tree) and associate the primary keys of rows that fall into particular intervals. We can call this the label generation part where label is for example 10-20, or 35-40. 
+	When a user gives us a range, lets say age between 15 and 20. We will query this segment tree to find a valid range covers the query range. In this case 10-20. Then the document ids are fetched for this range and the associated values are received. 
+	* `Select * from t1 where age>10`:
+		* First ask segment tree for valid ranges. Lets say it returns 1-4 and 5-10. 
+		* Then issue execution for `t1/age_range_index/1_4` and `t1/age_range_index/1_5`
+		* Upon receiving doc_ids, we generate query `t1/<col_name>/pk`
+	* `Select col2 from t1 where 20<age<40`
+		* Same thing as above, just only issue requests for col2 instead of every column. 
+	* `Select col2 from t1 where age>20 and salary=40`
+		* Assuming we have an index on salary and age.
+		* Issue a request for both indexes, range and salary. 
+		* Upon receiving both values, calculate the intersection. If doc_ids exist then fetch values, otherwise return null. 
+		* Make sure both are in same batch to get responses together?
+3) Join Queries: 
+	Construct join maps on the attributes of that are to be joined. 
+	* PK-FK join:
+		* A simple list of PK-->FK join. This is for a complete join `select * from t1 join t2 on t1.pk=t2.fk`
+		* For example if pk in t1 is disease and fk in t2 is symptom. 
+		
+		T1 
+		
+		| ID | Disease | Meds | Stay   |
+		|----|---------|------|--------|
+		| X  | Flu     | abc  | 2 days |
+		| Y  | Fever   | xyz  | 1 day  |
+		
+		T2
+		
+		| ID  | Name   | Age | Symptom |
+		| --- | ------ | --- | ------- |
+		| 1a  | Haseeb | 24  | Flu     |
+		| 2b  | Ahmed  | 25  | Fever   |
+		
+		Map would look like: 
+		
+		| PK | FK       |
+		|----|----------|
+		| X  | 1a,3a,4a |
+		| Y  | 2b,1b,2d |
+		
+		Generating queries would mean simply iterating over the map and issuing queries: 
+		`t1/<col>/X` and `t2/<col>/1a` etc
+
+	* Join on Indexes column: `select * from t1 join t2 where t1.age=t2.age`
+	* Similar sort of map as shown above. We would like to also keep a record of the values of age in this case in the map so we can support additional filtering like `select * from t1 join t2 where t1.age=t2.age and age=20` or `select * from t1 join t2 where t1.age=t2.age and age= between 10 and 20`
+
+4) Updates:
+	* `Update t1 set salary = 20 where age = 20`
+		* Fetch pk from index where age = 20. `t1/age_index/20`
+		* Insert into cache the K:V pairs `t1/salary/pk : 20`.
+		* Issue a read request for old values from system. Discard them (Don't insert them into cache)
+		* Requires executor to hold more state (Know what to not add to cache or what to add)
+	* `Update t2 set salary = 40`
+		* Similar to the past part. But here we would need to do a full table scan to get all primary keys.
+	* `Update t1 set age=20 where name='haseeb'`
+		* In this case we don't have an index on name. We will need to pull all records
+		* One we find the pk with the name haseeb, we will update its age column by adding it to cache and issuing a read (That shouldn't save to cache)
+		* Will also need to update index. 
+
+5) Aggregates:
+	* MIN/MAX: Trivial to keep this as metadata on proxy for each numeric attribute. Verify whenever an update happens. 
+	* COUNT: 
+		* `select count(*) where age>10`
+			* Issue a request for age>10 to its index. Count distinct pks returned.
+		* `select count(*) from t1`
+			* Return table pk range count 
+		* `select count(col2) from t1 where col2=10`
+			* In case col2 doesn't have an index, issue `t1/col2/pk` for each pk of the table. Then filter out for 10. 
+	* Distinct: 
+		* I think its easier to keep as metadata on the proxy. Verify if it changes on updates
+	* SUM: 
+		* `select SUM(salary) from t1 where age>10`
+			* Fetch doc_ids/pk for rows>10.
+			* Issue requests for salary using those pk. Sum them
+
+As long as you are doing an aggregate with an indexed attribute to filter values, we can do it. If not then a full table scan is needed. 
+
+
+
+#### Pseudocode
+[[updatedFlow.canvas|updatedFlow]]
+1) Parser : Handles parsing sql into something the indexer understands
+2) Indexer: The brains of the operation. Does all house-keeping for queries, optimizations etc. 
+3) Load-Balancer: Makes sure no one proxy runs ahead of another
+4) Executor proxy: Follow $\alpha - \beta$ uniformity to provider protection against access pattern and volume attacks. 
+
+
+Global Variable: PK <-- 0 
+##### Table Creation
+
+`CreateTable(TableName,TableData,IndexColName,IndexTypes)`
+
+For example `CreateTable(Employee,<csv_file_path>,[age,salary],[point,range]`
+
+Operations:
+1) Read the tableData into memory and assign each row an incrementing PK.  
+2) For each index in the IndexColName:
+	1) Identify what type of index is it (using IndexTypes)
+	2) If it is a point index:
+		1) Identify the Unique values for that column `SET(tableData[age]` for example. 
+		2) Create an map, initialize it with keys: `Employee/age/val1` .. `Employee/Age/valN`
+		3) Iterate over the entire table. Concatenate the PK of that row to the value for the assigned key. (If row has age 20 and pk 12, then go to `Employee/age/12` in the map and add 12 to its value)
+		4) Save this map.
+	3) If it is a range index:
+		1) Identify the Min and Max from the data.
+		2) Call `createSegmentTree(min,max)`
+		3) Initialize an empty map. 
+		4) Iterate over entire table. For each value, call `segmentTree.getLabel(val)`. This would return the ranges this value maps to for example (2-8,4-5).  Insert the PK of this row to its associate keys in the temporary map. For example if salary is 5, then add pk to keys `employee/salary/2_8` and `employee/salary/4_5`. We can also
+		5) Save this map.
+		6) **This method creates log(n) labels for each value. So a total of n log n k/v pairs. We can possible just fetch the last label (4-5) instead of labels higher up in the tree to reduce # of labels**. 
+3) Generate key/value pairs for each row and each column:
+	1) For row in tableData
+		1) For col in tableData 
+			1) key = `employee/col/row.pk`
+			2) value = `tableData[row][col]` <-- 2d matrix indexing
+			3) tableMap.key = value.
+4) Save the tableMap and index maps. 
+5) Once all tables have been processed. We can proceed with binning process over the entire dataset (data + indexes)
+
+##### Indexer:
+Responsibilities: 
+1) Parser provides high-level requirements (give me colx where age is between x and y). 
+2) Indexer takes these inputs and generates the appropriate keys to index using metadata information, depending on availability of indexes etc. 
+3) It does housekeeping for all requests that are being indexes and waiting for values, requests that have received their values and need to be returned. 
+4) It also handles optimizations for aggregation.
+5) Will also handle logic for updates. 
+
+
+
+Structure of relational data
+and query patterns
+
+TPC-C 
+Berkley Cloud Benchmark 
+Electronic Health thingy 
+Arx
+
+
+Pseduocode for one type of query End-To-End
+
+
+## March 8th + March 15th 
+
+##### Difference between tpc-c and tpc-h:
+
+1) Kaggle
+2) UCI --> Their dataset collections. 
+3) Chicago Crime Dataset. See if they use SQL queries. 
+
+
+Stick with TPC-C. Don't do TPC-H (Analyitcal.)
+https://web.archive.org/web/20120919183401/http://www.tpc.org/information/benchmarks.asp
+
+Group-by, Order-by --> See if we can do in future 
+(Keep Both)
+
+TPC-C : Does Removing transactions remove moving out of the queries? (Correctness.) --> See if TPC-E is non-transactional. Maybe we can use that. 
+TPC-C simulates a complete computing environment where a population of users executes transactions against a database. The benchmark is centered around the principal activities (transactions) of an order-entry environment. (No dbgen on official tpc website.)
+
+TPC-H:
+The TPC Benchmark™H (TPC-H) is a decision support benchmark. It consists of a suite of business oriented ad-hoc queries and concurrent data modifications. The queries and the data populating the database have been chosen to have broad industry-wide relevance. This benchmark illustrates decision support systems that examine large volumes of data, execute queries with a high degree of complexity, and give answers to critical business questions.
+
+Information on Schema + Queries: 
+https://github.com/cmu-db/benchbase/blob/main/src/main/resources/benchmarks/tpch/ddl-cockroachdb.sql
+
+TPC-H has a dbgen utility which creates a database. We also have a list of queries and corresponding answers to those queries. 
+
+
+##### Berkley Cloud Benchmark (Neutral)
+https://amplab.cs.berkeley.edu/benchmark/
+
+Has Queries + Workload. 
+
+
+##### Medical Health Records:
+
+**1) ORBDA: A dataset for benchmarking OpenEHR systems.** 
+
+This project aims to assemble and make publicly available a database generated in accordance with the specifications of the openEHR foundation to be used in studies evaluating persistence mechanisms for systems based on openEHR. A set of Electronic Health Records (EHR), based on the openEHR reference model, can be generated from publicly available data to simulate a production EHR system. The data consists of APACs and AIHs made publicly available by DATASUS, without patient identification, from 2008 to 2012. Archetypes and templates were created to convert data from datasus .dbf files into pseudo RES, generated according to the specifications of the openEHR foundation.
+
+
+https://www.lampada.uerj.br/projetos/orbda/
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5749730/
+https://github.com/pradeepsen99/Patient-Similarity-Prediction/blob/master/DataBaseScripts/orbdaCreateTables.sql
+
+Have Schema + data, No Queries (we can create our own?)
+Comments: I think we can test range with conversion to point queries first. Then decide if we want to implement tree based range or not. 
+
+
+**2) Medical Information Mart for Intensive Care III** 
+
+A large, freely available database comprising de-identified health-related data associated with over forty thousand patients who stayed in critical care units of the Beth Israel Deaconess Medical Center in Boston, Massachusetts.
+
+https://github.com/MIT-LCP/mimic-code/
+
+Has data + some exploratory queries. 
+
+**3) eICU Collaborative Research Database**
+Similar to MIMIC-III, the eICU database has a GitHub repository where users have contributed SQL code for various analyses.
+https://github.com/MIT-LCP/eicu-code
+
+
+Some of the healthcare datasets we saw in papers (for example FreeHealth, isn't available online? The website doesn't work anymore) 
+Generally, datasets are available but we would need to create queries ourselves. 
+
+
+
+<hr>
+
+##### Pseudocode
+
+* PK Per table (So we can do inserts. Otherwise inserts would cause overlapping pks table1 ends at 99 and table 2 starts at 100)
+###### Database Initialization: 
+Initialize 
+$R \gets$ Whatever we set it to. (# of Real Values in a batch) 
+$plainTextKV \gets \emptyset$ //Total set of all k/v pairs generated at init. Before binning. 
+$metaData \gets \emptyset$  (min,max,pk_start,pk_end,column_info) 
+$pointIndex \gets \emptyset$ 
+$joinMaps \gets \emptyset$
+
+<hr> 
+
+DBCaller --> Calls CreateTable for each table --> Does Bucketing --> initializes each Waffle. 
+#### 1) Initialization:
+`CreateTable(tableName,tableData,indexColName,indexTypes)`
+
+For example `CreateTable(employee,<csv_file_path>,[age,salary],[point,range]`
+
+**Assumption: Treating Ranges as a list of points. In case we maintain a tree, this part has to change.** 
+
+Operations: 
+$data \gets tableData$ //ReaDatata
+$pointIndexList \gets \emptyset$ //List of indexes. Store indexes here.
+$allColumns \gets data.GetColumnNames()$ 
+$pk \gets 0$
+$for$ $(i,index)$ $in$ $indexTypes.enumerate()$: // Initialize the indexes
+	$colName \gets$ $indexColName[i]$ 
+	$uniqueValues \gets$ $Set(data[colName])$ //Set returns unique values in list.
+	$colNameMap \gets$ Initialize Map. Use $uniqueValues$ as Keys, Value is $currentRowVal$ which is $\emptyset$.  		
+	$pointIndexList.push(colNameMap)$
+
+$for$ $row$ $in$ $data$:
+	$for$ $col$ in $allColumns$: 
+		$key \gets$ $tableName/col/pk$ 
+		$value \gets row[col]$
+		$for$ $index$ $in$ $pointIndexList$:  //Index creation. For each row, add Pk to its corresponding index.
+			$if \ col \ in \ pointIndexList:$ 
+				 $index[tableName][col].push(PK)$ 
+		$outSourceKV.push((key,value))$ //Add to total K/V pairs generated. 
+	$pk++$
+
+$for$ $index$ $in$ $pointIndexList$.: 
+// Replace the for loop below with Jolines indexing function/logic.  It will return a set of key/value pairs and metadata
+	for $(key,value)$ $in$ $index.items()$:
+		$indexKey \gets tableName/index/key$ 
+		$outSourceKV.push((indexKey,value))$ //Add to total K/V pairs generated. 
+
+$tableInformation \gets (min,max,0,pk-1,allColumns)$ //$PK-1$ is last row_id. Min/Max for each column. 
+$metadata.push(tableInformation||index\_information)$ 
+$pointIndex.append(pointIndexList.indexNames())$ //Do as a Map --> One index metadata per table. 
+
+<hr> 
+
+`CreateJoinMap(table1,table1Column,table2,table2Column)`
+For example `CreateMap(Employee,age,Salary,age)`
+
+//Parallel Computing --> Create Tables/Joins in parallel --> Save everything to file. 
+
+Operations: 
+$joinedTable \gets sortMergeJoin(table1,table1Column,table2,table2Column)$ 
+//We can also use other join algorithms like hash join. 
+
+$mapID \gets$Unique identifier for this join. 
+$joinMap\gets$ empty map. 
+$for$ $row$ in $joinedTable$:
+	$key \gets row.table1Column$
+	$value \gets row.table1PK$
+	$value2 \gets row.table2PK$
+	$joinMap[key].Pk1.append(value)$
+	$joinMap[key].Pk2.append(value2)$
+	`{'key':'pk1':[],'pk2':[]} --> {'20':'pk1':[1,3,2,5],'pk2':[4,2,5,1]}`
+	
+$joinMaps\_mapID \gets joinMap$
+$joinMaps.push(joinMaps\_mapID)$ //Add to join Maps 
+
+<hr> 
+
+###### 2) Parsing 
+
+`ExecuteQuery(statement)`
+
+For example `ExecuteQuery('select age from Employee')` 
+
+No direct pseudocode. 
+In the parsing module, we want to only parse the SQL statement into a Abstract Syntax Tree and call appropriate functions of the Indexer/Query Resolver. 
+
+<hr> 
+
+#### 3) Query Resolver 
+
+`doSelect(tableName,colList,searchColumn,searchValue)` //Works for range as well. searchValue would just be a list (min,max)
+For example: 
+`select * from table1` --> `doSelect(table1,all,NULL,NULL)`
+`select * from table1 where age=10` --> `doSelect(table1,all,age,10)`
+`select salary,name from table1 where age=20`--> `doSelect(table1,[salary,name],age,20)`
+`select name from table1 where age between 10 and 20`--> `doSelect(talbe1,[name],age,[10,20])`
+
+
+Operations:
+$if$ $searchColumn$ $not$ $in$ $pointIndex$ $or$ $searchColumn$ $is$ $null$:
+	$return$ $fullTableScan(tableName,colList,searchColumn,searchValue)$
+$else$ 
+	$indexName \gets pointIndex.getIndex(searchColumn)$ 
+	$indexKey \gets indexName/searchValue$ //When searchValue is a list, indexKey will be a list for each key in range. 
+	$doc\_ids \gets waffleAddBatch(indexKey)$ 
+	$while$ $(doc_ids.finished = false)$  {
+		//Busy Wait. 
+	}
+$requestBatch \gets \emptyset$
+$if \ colList=all:$
+	$columnList \gets metaData(tableName).columnNames$
+$else:$
+	$columnList \gets colList$
+$for \ id \ in \ doc\_ids:$ 
+	 $for \ col \ in \ colList$
+		 $key \gets tableName/col/id$  -- Assuming id contains partition information. 
+		 $requestBatch.append(key)$
+
+$return \ waffleAddBatch(requestBatch)$
+
+<hr> 
+
+`doJoin(table1Name,table2Name,colList,searchCol,searchValue,joinColumns`
+For example:
+`select * from table1 join table2 on t1.id=t2.e_id` --> `doJoin(table1,table2,all,NULL,NULL,[id,e_id])`
+`select name from table1 join table2 on t1.age=t2.age where age=10` --> `doJoin(table1,table2,[name],age,10,[age,age])`
+`select name from table1 join table2 on t1.age=t2.age where salary=200` -->`doJoin(table1,table2,[name],salary,200,[age,age])
+
+Go from best to worest case. 
+Operations:
+$if$ $joinColumns$ $not$ $in$ $joinMaps$: //Check if joinMap exists
+		Improve performance of this (streaming data --> parallel fetching of t1 and t2). 
+	$tableOne \gets fullTableScan(tableName,colList,searchColumn,searchValue)$ //Get Table 1
+	$tableTwo \gets fullTableScan(tableName,colList,searchColumn,searchValue)$//Get Table 2
+	$return \ tableJoin(tableOne,tableTwo,joinColumn,searchCol,searchValue)$
+$else$ 
+	$requestBatch \gets \emptyset$
+	$postProcessing \gets false$ 
+	$requiredJoinMap \gets joinMaps[joinColumns]$ //Find appropriate joinMap
+	$if \ requiredJoinMap \ includes \ searchValue:$
+		$keys \gets constructRequestKeys(requiredJoinMap,searchCol,searchValue)$  //The search value was recorded when we made the map (Example 2)
+		$requestBatch.append(keys)$ 
+	$else:$ 
+		$postProcessing \gets true$
+		$keys \gets constructRequestKeys(requiredJoinMap,NULL,NULL)$  //Do a normal join, containing all possible values for searchCol. (Example 3)
+		$requestBatch.append(keys)$ 
+	
+	$data = waffleAddBatch(requestBatch)$
+	$if \ postProcessing = true:$
+		return $filteredData(data,searchCol,searchValue)$ (example 3)
+	$else:$
+		$return \ data$ (example 2)
+
+<hr> 
+
+`doAggregate(tableName,aggregate,colList,searchCol,searchVal)`
+* `select count(id) from table1`  --> `doAggregate(table1,count,id,null,null)`
+* `select sum(age) from table1` --> `doAggregate(table1,sum,age,null,null)`
+* `select min(age) from table1`--> `doAggregate(table1,min,age,null,null)`
+* `select sum(salary) from table1 where age between 20 and 30` --> `doAggregate(table1,sum,salary,age,[20,30])`
+
+$tableMetaData \gets metadata.get(tableName)$ Returns metadata for a particular table. 
+$if \ aggregate = min \ or \ max:$
+	$colMetaData \gets tableMetaData[colList]$ --> 
+	$return \ colMetaData[aggregate]$ --> returns desired aggregate.
+$if \ aggregate = count$ --> fix this, not working for last example count* --> if no where clause then return first if. 
+	$if \ colList == all:$
+		$return  \ tableMetaData.pkRange()$ --> Won't work for deletes.--> maintain another delete counter. total = pk_range - delete. 
+	$else \ if \ searchCol \ has \ index:$
+		$return \ count(doSelect(tableName,colList,searchCol,searchVal))$ -->Do a selection and then count. Optimize by calling an index only function here.
+	$else:$
+		Do a full table scan and check where the conditions are true. --> Maintain a map of unique values for benchmarking. Also do for worest case.  
+$if \ aggregate=sum:$
+		$return \ sum(doSelect(tableName,colList,searchCol,searchVal))$ --> Do a selection and then sum. 
+$if \ aggregate = average:$
+	//Recursively call the aggregate function for count and sum. 
+	$count \gets doAggregate(tableName,count,colList,searchCol,searchVal)$
+	$sum \gets doAggregate(tableName,sum,colList,searchCol,searchVal)$
+	$return \ sum\div count$ 
+
+Either:
+1) Consult metadata to answer query
+2) call `doSelect` or `doJoin` and aggregate the result. 
+
+<hr> 
+
+`doUpdate(tableName,colList,newValue,searchColumn,searchValue)`
+* `update table1 set age=20` --> `doUpdate(table1,age,20,null,null)`
+* `update table1 set age = 20, salary = 10 ` --> `doUpdate(table1,[age,salary],[20,10],null,null)`
+* `update table1 set salary = 20 where age=30` --> `doUpdate(table1,salary,20,age,30)`
+
+Operations:
+$requestBatch \gets \emptyset$
+$if \ searchColumn == NULL:$ //Full column is being changed
+	$for \ col \ in \ colList:$
+		$if \ col \ has \ index:$
+			$pk\_tableRange \gets metadata.getPkRange(tableName)$
+			 $for \ doc\_id \ in \ documents:$
+				 $key \gets tableName/col/doc\_id$
+				 $value \gets newValue$
+				 $requestBatch.append((key,value,op=write))$
+			$newIndex \gets makeIndex(pk\_tableRange,age))$ //Jolines Function gets called here and returns a list of K:V pairs. 
+			$for \ key,value \ in \ newIndex:$
+				$requestBatch.append((key,value,op=write))$
+			$deleteIndex(tableName,age)$ --> Call to delete old indexes on age (this would be multi-round). Call this before sending request batch to Waffle so delete operation is in front of the queue. 
+		$else:$
+			$pk\_tableRange \gets metadata.getPkRange(tableName)$
+			 $for \ doc\_id \ in \ documents:$
+				 $key \gets tableName/col/doc_id$
+				 $value \gets newValue$
+				 $requestBatch.append((key,value,op=write))$
+$else:$
+	$for \ col \ in \ colList:$
+		$if \ col \ has \ index:$ 
+			$documents \gets doSelect(tableName,col,searchColumn,searchValue)$ --returns truncated column depending on searchColumn
+			$old\_values \gets \emptyset$ 
+			$for \ doc \ in \ documents:$
+				$doc\_id \gets doc.doc\_id$
+				$key \gets tableName/col/doc\_id$
+				$value \gets newValue$
+				$old\_values.append(doc.value)$ -->Save old value to modify its index.
+				$requestBatch.append((key,value,op=write))$	
+			$removePkFromIndex(col,old\_values,documents.doc\_ids())$ --> Call function to fetch indexes of old_values and remove the given doc_ids from it. 
+			$addPkToIndex(col,value,documents.doc\_ids())$ --> Calls function to add document_ids to the new values index. 
+		$else:$
+			 $documents \gets doSelect(tableName,col,searchColumn,searchValue)$ 
+			 $for \ doc \ in \ documents:$
+				$doc\_id \gets doc.doc\_id$
+				$key \gets tableName/col/doc\_id$
+				$value \gets newValue$
+				$old\_values.append(doc.value)$ -->Save old value to modify its index.
+				$requestBatch.append((key,value,op=write))$	
+
+$waffleAddBatch(requestBatch)$
+$return$ 
+
+1) Generally, this would be the same as reading. The op in this case would be write, and the value would be the value passed by the user and not NULL. 
+2) Ideally the existing waffle interface would handle the write, not the systems above it. 
+3) `removePkFromIndex` and `addPkToIndex` are going to be expensive (multi-round). ToDo: Can we do any better? 
+
+<hr> 
+
+#### 4) Load Balancer:
+
+Initialization: 
+1) Initialize queues for each executor proxy. Access via $executorQueues$ variable.  
+2) Initialize $E \gets NumberOfExecutors$ 
+3) Start a thread that runs the function `executeBatch`
+<hr> 
+**Interfaces:** 
+
+`WaffleAddBatch(keys)`
+
+Operations: 
+$for \ key \ in \ keys:$
+	$hashValue \gets HASH(key)$ 
+	$executorIndex \gets hashValue \mod E$
+	$executorQueues[executorIndex].enqueue(key)$ 
+
+<hr> 
+
+`executeBatch()`
+
+$while (true):$
+	$for \ executor \ in \ executorQueues:$
+		$if \ executor.size() != R:$ // R is real keys. A global constant 
+			$break$
+	$for \ executor \ in \ executorQueues:$
+		$batchKeys \gets executor.dequeue(R)$  //Dequeue R requests. 
+		$executor.WaffleExecutor(batchKeys)$
+
+
+<hr> 
+
+#### 4) Executor:
+
+`WaffleExecutor(Keys)`
+
+1) Same interface given by current Waffle (`get_batch`). 
+2) Have to modify so that:
+	1) If a key does not exist in the waffle BST, then replace it with a **Fake Request on Real Key.**
+	2) Be able to understand partition_id and ask the appropriate redis server.
+		1) We could do this by maintaining a map between ipAddress --> Partition id. This is shared with all executors at initialization. 
+
+
+<hr> 
+
+##### Questions: 
+
+1) Who should assign a new partition to the doc_id after fetch? 
+	1) Should it be the executor itself, or the Indexer? 
+	2) We need a strong proof that the keys are distributed randomly we in each execution, relatively similar # of keys get requested from each partition.
+2) Should we write a parser or convert queries to the functions manually for benchmarking? 
+	1) Support TPC Queries
+	2) Doesn't matter if your using parser or doing it pre-defined. But should we **correct**.
+
+Query Optimization:
+1) Do a filter first and then table join if join map doesn't exist. 
+2) Search about query optimization.
+3) Planner --> Can we use a plaintext planner and map it to our logic. 
+
+Next week:
+https://www.querifylabs.com/blog/rule-based-query-optimization
+
+
+1) Parser + Optimizer --> How can we do it in the least expensive way possible.
+	1) I think biggest slowdown is 1round vs 2 round protocol. 
+2) Can we use an optimizer from plaintext dbstores and map it to ours. 
+	1) Maybe we can use a rule-based optimizer only. Cost based optimizers use analytics of the underlying data (histograms, distributions etc) to generate cost estimates. 
+3) Plug-in Optimizer or Create our plan for every query we support. 
+	1) For the purposes of benchmarking, maybe we can plan for every query ourselves? 
+
+
