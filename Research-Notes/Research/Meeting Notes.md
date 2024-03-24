@@ -840,7 +840,7 @@ For example:
 `select name from table1 join table2 on t1.age=t2.age where age=10` --> `doJoin(table1,table2,[name],age,10,[age,age])`
 `select name from table1 join table2 on t1.age=t2.age where salary=200` -->`doJoin(table1,table2,[name],salary,200,[age,age])
 
-Go from best to worest case. 
+Go from best to worest case. --ToDo. 
 Operations:
 $if$ $joinColumns$ $not$ $in$ $joinMaps$: //Check if joinMap exists
 		Improve performance of this (streaming data --> parallel fetching of t1 and t2). 
@@ -918,7 +918,7 @@ $if \ searchColumn == NULL:$ //Full column is being changed
 				$requestBatch.append((key,value,op=write))$
 			$deleteIndex(tableName,age)$ --> Call to delete old indexes on age (this would be multi-round). Call this before sending request batch to Waffle so delete operation is in front of the queue. 
 		$else:$
-			$pk\_tableRange \gets metadata.getPkRange(tableName)$
+			$pk\_tableRange \gets metadata.getPkRange(tableName)$ --> Move up outside of if/selse block. 
 			 $for \ doc\_id \ in \ documents:$
 				 $key \gets tableName/col/doc_id$
 				 $value \gets newValue$
@@ -969,16 +969,16 @@ Operations:
 $for \ key \ in \ keys:$
 	$hashValue \gets HASH(key)$ 
 	$executorIndex \gets hashValue \mod E$
-	$executorQueues[executorIndex].enqueue(key)$ 
+	$executorQueues[executorIndex].enqueue((key||value))$ 
 
 <hr> 
 
 `executeBatch()`
 
 $while (true):$
-	$for \ executor \ in \ executorQueues:$
+	$for \ executor \ in \ executorQueues:$ //While Loop not for loop. 
 		$if \ executor.size() != R:$ // R is real keys. A global constant 
-			$break$
+			$continue$ 
 	$for \ executor \ in \ executorQueues:$
 		$batchKeys \gets executor.dequeue(R)$  //Dequeue R requests. 
 		$executor.WaffleExecutor(batchKeys)$
@@ -993,7 +993,8 @@ $while (true):$
 1) Same interface given by current Waffle (`get_batch`). 
 2) Have to modify so that:
 	1) If a key does not exist in the waffle BST, then replace it with a **Fake Request on Real Key.**
-	2) Be able to understand partition_id and ask the appropriate redis server.
+	2) PUT Request --> TODO. Replace Dummy key with new value. 
+	3) Be able to understand partition_id and ask the appropriate redis server.
 		1) We could do this by maintaining a map between ipAddress --> Partition id. This is shared with all executors at initialization. 
 
 
@@ -1004,7 +1005,9 @@ $while (true):$
 1) Who should assign a new partition to the doc_id after fetch? 
 	1) Should it be the executor itself, or the Indexer? 
 	2) We need a strong proof that the keys are distributed randomly we in each execution, relatively similar # of keys get requested from each partition.
-2) Should we write a parser or convert queries to the functions manually for benchmarking? 
+	3) Lets just assume redis is just one single keyspace --> Redis Cluster. 
+
+2) Should we write a parser or convert queries to the functions manually for benchmarking? (already covered)
 	1) Support TPC Queries
 	2) Doesn't matter if your using parser or doing it pre-defined. But should we **correct**.
 
@@ -1013,9 +1016,9 @@ Query Optimization:
 2) Search about query optimization.
 3) Planner --> Can we use a plaintext planner and map it to our logic. 
 
-Next week:
-https://www.querifylabs.com/blog/rule-based-query-optimization
 
+
+https://www.querifylabs.com/blog/rule-based-query-optimization
 
 1) Parser + Optimizer --> How can we do it in the least expensive way possible.
 	1) I think biggest slowdown is 1round vs 2 round protocol. 
@@ -1025,3 +1028,31 @@ https://www.querifylabs.com/blog/rule-based-query-optimization
 	1) For the purposes of benchmarking, maybe we can plan for every query ourselves? 
 
 
+
+Index on age (employee table)
+
+Key: employee/age/20
+Val: 1||p1, 2||p1, 3||p2, 4||p3 ,5||p1 --> PK||Partition
+
+What if we hash the timestamp to identify which partition its on? 
+Index doesn't need to keep a track of partitions now. (For indexed and non indexed values)
+
+
+
+Index updates: 
+
+Updating index --> age/9/1 --> overflows to age/9/2 
+This means we have N+1 now. One of the executors is now responsible for N/3 + 1 keys. This changes $\alpha$ for that executor proxy. Same thing for removing an index key. 
+
+
+Think about reusing key/value 
+Worest Case Partition --> 1M Rows all have same age. --> Don't do for project.
+This is when we have two datasets, one has uniform dist of values for age and one has skewed. See difference in # of partitions made for each. 
+
+The issue is that when we make changes to the index, its possible that an index gets removed (key moved from A to B, leaving A empty) or a new index partition gets created (table/age_index/10_2 --> table/age_index/10_3). This adds one more key to an executor. 
+
+We can't have the same executor save this key either since the key `table/age_index/10_3` can get hashed to another executor proxy, so the indexing creation/deletion shouldn't be done by the executor. The query processor should delete/add new ones. 
+
+Figure out how can we improve this. Can we just rely on the probability that over time each executor gets similar # of deletes and inserts? Can we give a window'd alpha bound? (Alpha is between some min max)? How can we deal with this? 
+
+This is dependent on the workload as well. 

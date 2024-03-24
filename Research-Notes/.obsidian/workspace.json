@@ -11,6 +11,21 @@
             "id": "b952102c122deef1",
             "type": "leaf",
             "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Research/updatedFlow.canvas",
+                "viewState": {
+                  "x": 19.008196721311446,
+                  "y": -127.00999999999996,
+                  "zoom": -0.22913399921550318
+                }
+              }
+            }
+          },
+          {
+            "id": "979391a3707b7640",
+            "type": "leaf",
+            "state": {
               "type": "markdown",
               "state": {
                 "file": "Research/Meeting Notes.md",
@@ -19,7 +34,8 @@
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -154,11 +170,11 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "8909dc3d46afbb30",
+  "active": "979391a3707b7640",
   "lastOpenFiles": [
-    "Untitled.canvas",
-    "Research/Meeting Notes.md",
     "Research/updatedFlow.canvas",
+    "Research/Meeting Notes.md",
+    "Untitled.canvas",
     "Pasted image 20240315080831.png",
     "2024-03-10.md",
     "Research/Key-Value or SQL data layer.md",
