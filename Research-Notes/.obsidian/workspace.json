@@ -11,31 +11,15 @@
             "id": "b952102c122deef1",
             "type": "leaf",
             "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Research/updatedFlow.canvas",
-                "viewState": {
-                  "x": 19.008196721311446,
-                  "y": -127.00999999999996,
-                  "zoom": -0.22913399921550318
-                }
-              }
-            }
-          },
-          {
-            "id": "979391a3707b7640",
-            "type": "leaf",
-            "state": {
               "type": "markdown",
               "state": {
-                "file": "Research/Meeting Notes.md",
+                "file": "Winter 2024/Slides.md",
                 "mode": "source",
                 "source": false
               }
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -101,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/Meeting Notes.md",
+                "file": "Winter 2024/Slides.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/Meeting Notes.md",
+                "file": "Winter 2024/Slides.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -141,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Research/Meeting Notes.md"
+                "file": "Winter 2024/Slides.md"
               }
             }
           },
@@ -170,15 +154,19 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "979391a3707b7640",
+  "active": "b952102c122deef1",
   "lastOpenFiles": [
+    "Winter 2024/CS798 - Multicore Programming.md",
+    "Winter 2024/Demo Reviews.md",
+    "Winter 2024/Slides.md",
     "Research/updatedFlow.canvas",
+    "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Research/Meeting Notes.md",
-    "Untitled.canvas",
+    "Pasted image 20240222232706.png",
     "Pasted image 20240315080831.png",
+    "Untitled.canvas",
     "2024-03-10.md",
     "Research/Key-Value or SQL data layer.md",
-    "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Research/Notes.md",
     "Research/SSE.md",
     "Research/Segment Tree.md",
@@ -187,13 +175,10 @@
     "Research/Arx.md",
     "Research/Query Flow.canvas",
     "Research/MySQL Backend.canvas",
-    "Winter 2024/Demo Reviews.md",
     "Research/French Toast.md",
     "Research/Existing SQL databases using KV stores.md",
     "Images/Pasted image 20240222223432.png",
-    "Winter 2024/CS798 - Multicore Programming.md",
     "Research/Practical Private Range Search Revisited.md",
-    "Pasted image 20240222232706.png",
     "Images/Screenshot from 2024-02-07 16-22-43.png",
     "Images/Pasted image 20240222215053.png",
     "Pasted image 20240222215027.png",
