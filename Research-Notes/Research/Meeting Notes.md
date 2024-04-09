@@ -1056,3 +1056,11 @@ We can't have the same executor save this key either since the key `table/age_in
 Figure out how can we improve this. Can we just rely on the probability that over time each executor gets similar # of deletes and inserts? Can we give a window'd alpha bound? (Alpha is between some min max)? How can we deal with this? 
 
 This is dependent on the workload as well. 
+
+
+
+
+--> Fix changes in the code above. 
+--> Move to latex with new changes 
+--> Start re-implementing code for waffle and see if it works (Performance + Security Analysis.)
+--> Go over the case given by florian. Do we have enough randomness? Case: Worst Case (We don't have a join map. Do full table scans.)
