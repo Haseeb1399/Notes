@@ -1064,3 +1064,14 @@ This is dependent on the workload as well.
 --> Move to latex with new changes 
 --> Start re-implementing code for waffle and see if it works (Performance + Security Analysis.)
 --> Go over the case given by florian. Do we have enough randomness? Case: Worst Case (We don't have a join map. Do full table scans.)
+
+ 
+--> Keep small table in memory, stream larger table and write join to a WAL. 
+
+--> Deduplication across batches (One batch reads and deletes, other is trying to fetch but sees NULL (Leakage))
+
+https://redis.io/docs/latest/develop/use/pipelining/ 
+
+
+--> Replace executor with a ORAM executor or a Pancake Executor. 
+--> Each Executor gets same number of requests, that doesn't exactly leak distribution. 
