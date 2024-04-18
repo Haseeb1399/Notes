@@ -11,14 +11,11 @@
             "id": "040bf28266b9a903",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "Research/updatedFlow.canvas",
-                "viewState": {
-                  "x": -79.09918032786884,
-                  "y": -233.83803278688526,
-                  "zoom": -0.22913399921550318
-                }
+                "file": "Research/Meeting Notes.md",
+                "mode": "source",
+                "source": false
               }
             }
           }
@@ -88,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/updatedFlow.canvas",
+                "file": "Research/Meeting Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -105,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/updatedFlow.canvas",
+                "file": "Research/Meeting Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -128,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Research/updatedFlow.canvas"
+                "file": "Research/Meeting Notes.md"
               }
             }
           },
@@ -159,12 +156,13 @@
   },
   "active": "040bf28266b9a903",
   "lastOpenFiles": [
+    "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
+    "Research/updatedFlow.canvas",
     "Research/Meeting Notes.md",
     "Winter 2024/Slides.md",
     "Winter 2024/CS798 - Multicore Programming.md",
     "Research/SSE.md",
     "Winter 2024/Demo Reviews.md",
-    "Research/updatedFlow.canvas",
     "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Pasted image 20240222232706.png",
     "Pasted image 20240315080831.png",
@@ -187,7 +185,6 @@
     "Pasted image 20240222215027.png",
     "Images/Pasted image 20240222214823.png",
     "Pasted image 20240222215005.png",
-    "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Research/Range Search over Encrypted Multi-Attribute Data.md",
     "Research/Implementation Details.md",
     "Images/Pasted image 20240126101843.png",
