@@ -1137,9 +1137,25 @@ If we test it on random values (Random Increases and decreases). I run 20,000 it
 ![[Screenshot from 2024-04-19 00-42-03.png]]
 ![[Screenshot from 2024-04-19 00-44-07.png]]
 
-How C changes: 
+How C changes (% of N): 
 ![[Screenshot from 2024-04-19 00-48-07 1.png]]
 
 
+###### Aggregates over time 
+![[Screenshot from 2024-04-19 01-15-08.png]]
+
+If changes are aggregated over time: 
+![[Pasted image 20240419011550.png]]
+
+C changes: 
+![[Screenshot from 2024-04-19 01-16-09.png]]
+
+##### in case we only change cache when there is an increment: 
+![[Screenshot from 2024-04-19 01-19-46.png]]
+
+![[Pasted image 20240419012002.png]]
+
+C (max is 52%)
+![[Screenshot from 2024-04-19 01-20-22.png]]
 
 
