@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Research/Arx.md",
+                "file": "Research/Meeting Notes.md",
                 "mode": "source",
                 "source": false
               }
@@ -85,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/Arx.md",
+                "file": "Research/Meeting Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/Arx.md",
+                "file": "Research/Meeting Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Research/Arx.md"
+                "file": "Research/Meeting Notes.md"
               }
             }
           },
@@ -154,8 +154,9 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "99fd19eb00cbd149",
+  "active": "9d2b04f5f2651e8b",
   "lastOpenFiles": [
+    "Research/Arx.md",
     "Research/Meeting Notes.md",
     "Images/Screenshot from 2024-04-19 01-20-22.png",
     "Images/Pasted image 20240419012002.png",
@@ -190,7 +191,6 @@
     "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
     "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Research/Key-Value or SQL data layer.md",
-    "Research/Arx.md",
     "conflict-files-obsidian-git.md",
     "Research/Practical and Secure Substring Search.md",
     "Research/Range Search over Encrypted Multi-Attribute Data.md"
