@@ -4,22 +4,41 @@
     "type": "split",
     "children": [
       {
-        "id": "6b4491b7c3b4cc04",
+        "id": "f49ccc06042a6304",
         "type": "tabs",
         "children": [
           {
-            "id": "040bf28266b9a903",
+            "id": "9d2b04f5f2651e8b",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "image",
               "state": {
-                "file": "Research/Meeting Notes.md",
-                "mode": "source",
-                "source": false
+                "file": "Images/Pasted image 20240419003135.png"
+              }
+            }
+          },
+          {
+            "id": "36855d45b53c0d09",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "Images/Screenshot from 2024-04-18 20-58-49 1.png"
+              }
+            }
+          },
+          {
+            "id": "0402b3c8124b13f1",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "Images/Pasted image 20240419003135.png"
               }
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -85,7 +104,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/Meeting Notes.md",
+                "file": "Images/Pasted image 20240419003135.png",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +121,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/Meeting Notes.md",
+                "file": "Images/Pasted image 20240419003135.png",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +144,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Research/Meeting Notes.md"
+                "file": "Images/Pasted image 20240419003135.png"
               }
             }
           },
@@ -154,43 +173,45 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "040bf28266b9a903",
+  "active": "99fd19eb00cbd149",
   "lastOpenFiles": [
-    "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
-    "Research/updatedFlow.canvas",
+    "Images/Screenshot from 2024-04-19 00-30-53.png",
+    "Images/Screenshot from 2024-04-18 20-58-49 1.png",
+    "Images/Pasted image 20240419003135.png",
     "Research/Meeting Notes.md",
-    "Winter 2024/Slides.md",
-    "Winter 2024/CS798 - Multicore Programming.md",
-    "Research/SSE.md",
-    "Winter 2024/Demo Reviews.md",
-    "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
-    "Pasted image 20240222232706.png",
-    "Pasted image 20240315080831.png",
-    "Untitled.canvas",
-    "2024-03-10.md",
-    "Research/Key-Value or SQL data layer.md",
+    "Images/Screenshot from 2024-04-19 00-48-07 1.png",
+    "Images/Screenshot from 2024-04-19 00-48-07.png",
+    "Images/Screenshot from 2024-04-19 00-44-07.png",
+    "Images/Screenshot from 2024-04-19 00-42-03.png",
+    "Images/Screenshot from 2024-04-19 00-40-31.png",
+    "Images/Screenshot from 2024-04-19 00-39-36.png",
+    "Screenshot from 2024-04-19 00-16-45.png",
     "Research/Notes.md",
-    "Research/Segment Tree.md",
-    "Images/Pasted image 20240215145648.png",
-    "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
-    "Research/Arx.md",
+    "Research/updatedFlow.canvas",
+    "Research/Types of Joins.md",
+    "Winter 2024/Slides.md",
+    "Untitled.canvas",
+    "Winter 2024/Project CS 848.md",
+    "Winter 2024/Demo Reviews.md",
+    "Winter 2024/CS798 - Multicore Programming.md",
+    "Research/Waffle.md",
+    "Research/SSE.md",
     "Research/Query Flow.canvas",
-    "Research/MySQL Backend.canvas",
-    "Research/French Toast.md",
+    "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Research/Existing SQL databases using KV stores.md",
-    "Images/Pasted image 20240222223432.png",
-    "Research/Practical Private Range Search Revisited.md",
-    "Images/Screenshot from 2024-02-07 16-22-43.png",
-    "Images/Pasted image 20240222215053.png",
-    "Pasted image 20240222215027.png",
-    "Images/Pasted image 20240222214823.png",
-    "Pasted image 20240222215005.png",
-    "Research/Range Search over Encrypted Multi-Attribute Data.md",
+    "Research/MySQL Backend.canvas",
     "Research/Implementation Details.md",
-    "Images/Pasted image 20240126101843.png",
-    "Research/VEIL.md",
+    "Research/French Toast.md",
     "Winter 2024",
+    "Research/VEIL.md",
+    "Research/Segment Tree.md",
+    "Research/Practical Private Range Search Revisited.md",
+    "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
+    "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
+    "Research/Key-Value or SQL data layer.md",
+    "Research/Arx.md",
+    "conflict-files-obsidian-git.md",
     "Research/Practical and Secure Substring Search.md",
-    "Research/Waffle.md"
+    "Research/Range Search over Encrypted Multi-Attribute Data.md"
   ]
 }

@@ -1075,3 +1075,71 @@ https://redis.io/docs/latest/develop/use/pipelining/
 
 --> Replace executor with a ORAM executor or a Pancake Executor. 
 --> Each Executor gets same number of requests, that doesn't exactly leak distribution. 
+
+
+
+
+##### April 18 
+
+
+Task: 
+* Work on re-building waffle (Deadline end of April). If it takes too long then just use waffle as is. 
+* Work on optimisations within waffle (parallel decryption, faster redis interface (mget,pipelines)). 
+* Work on Updates (increase/decrease in keys for each waffle and how to handle alpha). 
+
+
+
+Redis: 
+https://medium.com/@jychen7/redis-get-pipeline-vs-mget-6e41aeaecef
+
+Mget is faster than pipeline. Code already uses Mget.  --> I tested it, mget is ~1.5 times faster than pipeline. 
+
+Alpha Calculation: 
+![[Screenshot from 2024-04-18 20-58-49 1.png]]
+
+Alpha = New timestamp - betaMap[key].  --> 
+
+timestamp --> Indicates how many server accesses have happened (since its a counter that increments at the start of each batch)
+betaMap[key] --> Refers to timestamp when it was written back to server. 
+
+(Accesses Made) - (time when it was written) ==> How many accesses were made since last written. 
+15 - 2 ==> 13 
+
+15 --> Current Server access
+2 --> When it was last written 
+
+Now since your fetching on the 15th access, there have been 13 accesses where this key was on the server and not read from it. 
+
+
+
+###### Simulation
+![[Screenshot from 2024-04-19 00-30-53.png]]
+
+I calculate Alpha, by incrementing N by 1 till 200, we see alpha grows as: 
+![[Pasted image 20240419003135.png]]
+
+Its a stepped function because of the ceil in the formula.
+
+Idea: 
+Instead of tinkering around with the batching parameters (B,$F_d$,R,$F_r$ ), we can adjust the cache by the same amount as N. 
+
+If N goes from N --> N+1
+C goes from C --> C+1 
+
+![[Screenshot from 2024-04-19 00-39-36.png]]
+
+Here I add i to both N and C. We get: 
+![[Screenshot from 2024-04-19 00-40-31.png]]
+
+
+If we test it on random values (Random Increases and decreases). I run 20,000 iterations: 
+
+![[Screenshot from 2024-04-19 00-42-03.png]]
+![[Screenshot from 2024-04-19 00-44-07.png]]
+
+How C changes: 
+![[Screenshot from 2024-04-19 00-48-07 1.png]]
+
+
+
+
