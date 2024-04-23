@@ -1158,4 +1158,16 @@ C changes:
 C (max is 52%)
 ![[Screenshot from 2024-04-19 01-20-22.png]]
 
+Cache --> 
 
+Decreasing Cache can be done with:
+* evicting values till I reach the original Cache size. 
+* Replacing the fake values in a batch ($F_D$ ) with these. 
+* For example, C=10 then I add 2 --> N=N+2 and C=12
+* I go back to N ==> C=10 --> 2 After eviction
+* B is now R+($F_D$-2) so that I can also write back whatever is being evicted out.
+
+
+Think about: 
+* Are there any edge cases for this? Does D decrease? Are we compromising security in any case. 
+* What happens to the dummy values we were about to write? Does their access frequency change at all?
