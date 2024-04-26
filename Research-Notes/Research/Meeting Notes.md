@@ -1174,6 +1174,16 @@ Think about:
 
 ## April 26 
 
+Some edge cases:
+1) Small values of $F_d$ :
+	* Case where cache sizes grows above $F_d$, its possible we stop adding $F_d$ for a few batches. Can possibly leak information (alpha for dummy value exceeds bound). 
+	* Solution: Never exceed some % of $F_d$ to replace with cache evictions. 
+
+2) Right now algorithm sets the timestamp of all dummy objects to the same value after $D/F_d$ accesses for randomisation. Maybe we can have a workload where this randomisation happens after a very long term (long enough to reveal a pattern?).
+	1) I don't think this would be an issue before of re-encryption? 
+3) 
+
+
 
 Perf report of proxy_server with core = 1
 
