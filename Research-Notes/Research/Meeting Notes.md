@@ -1171,3 +1171,47 @@ Decreasing Cache can be done with:
 Think about: 
 * Are there any edge cases for this? Does D decrease? Are we compromising security in any case. 
 * What happens to the dummy values we were about to write? Does their access frequency change at all?
+
+## April 26 
+
+
+Perf report of proxy_server with core = 1
+
+
+![[Screenshot from 2024-04-23 19-03-57.png]]
+
+![[Screenshot from 2024-04-23 21-45-40.png]]
+
+
+
+No encryption/decryption bottleneck. Main bottleneck is the BST. Can't make a lock free BST because you need to sort on every insert/delete. 
+
+
+![[flamegraph.svg]]
+
+
+What I did: 
+* Tried starting over implementation:
+	* Realised this will clearly take a lot more time since there are a lot of things going on, and some new programmatic concepts I would need to cover (like Promises and Futures in c++ --> I know what they are but not within c++). 
+	* Started looking into the proxy and capturing some performance metrics. One thing that stood out was the % of cpu taken up by the bst function `setFrequency`. 
+	* Looked into its implementation. The current Implementation:
+		* Uses an unordered hashmap to store and get frequencies of keys. This is basically O(1)
+		* Uses a <\set> (Balanced Binary Tree) with a compactor function to get key with min Frequency O(log n).
+		* Wrote and Ran a simple benchmark for setFrequency:
+			* BST size: 1.2 Million
+			* Pretty good performance.
+				* For single threaded ~ 3 Million Requests/Second.
+				* For 2 threads ~ 2 Million/s
+				* For 3 threads ~ 1.5 Million/s 
+				* For 4 threads ~ 1.7 Million/s
+		* I wanted to see if I could improve performance of just this component:
+			* Tried using a linked-list instead of Set.
+			* Tried Using only the unordered map and then sorting.
+			* Replacing Set with Ordered Map
+			* Lazy Sorting (Only sort when I need to).
+		* None of these worked and all resulted in a throughput <1000. 
+
+
+Overall I think, after experimenting for ~1.5 week that It'll be better (and faster) to use this implementation as is and build on top since it is already pretty well written. I can polish out any bugs as I go along but I think this should be self-contained. 
+
+As the project is right now, It's pretty easy to start and deploy (Although I need to make a few changes to the CMakeList.txt and fix dependency issues). So we can target the badges easily. 
