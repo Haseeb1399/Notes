@@ -1224,4 +1224,30 @@ What I did:
 
 Overall I think, after experimenting for ~1.5 week that It'll be better (and faster) to use this implementation as is and build on top since it is already pretty well written. I can polish out any bugs as I go along but I think this should be self-contained. 
 
-As the project is right now, It's pretty easy to start and deploy (Although I need to make a few changes to the CMakeList.txt and fix dependency issues). So we can target the badges easily. 
+	As the project is right now, It's pretty easy to start and deploy (Although I need `to make a few changes to the CMakeList.txt and fix dependency issues). So we can target the badges easily. 
+
+
+
+
+## May 10
+
+Load Balancer: 
+* Basic implementation done.
+* Works on remote machines (Load balancer connects to different executors and initializes them).
+* Experiments:
+	* Experiment one: Single machine, Default Benchmark (One provided in git repo). Redis on localhost. Number of Clients=1
+		* Throughput: 10239 op/s
+	* Experiment Two: Same as Experiment one, Number of Clients = 2
+		* Throughput: 10286 op/s
+	* Experiment Three: 
+		* Machine 1: Load balancer --> Initializes both executors and launches a thread to benchmark each executor.
+		* Machine 2: Executor 1 --> Connects to local redis server
+		* Machine 3: Executor 2 --> Connects to local redis server
+		* Throughput: 29704 op/s  --> ~x2.8 speedup
+* All experiments for Async client. 
+
+
+
+* Read Shortstack and see implementation. 
+* Do we need to reimplement in GO?
+* 
