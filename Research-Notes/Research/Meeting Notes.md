@@ -1248,6 +1248,175 @@ Load Balancer:
 
 
 
-* Read Shortstack and see implementation. 
-* Do we need to reimplement in GO?
-* 
+### May 17th
+
+Shortstack:
+
+![[Screenshot from 2024-05-15 23-20-13.png]]
+![[Screenshot from 2024-05-15 23-20-46.png]]
+
+Each layer forms a connection in the forward and reverse direction, (One socket for each # of workers in a layer). Propagate acknowledgements backwards. Clears state on when a particular request has been served. They can use simple sockets since the # of workers won't be a real bottleneck? They 3 workers in each layer as an example.
+
+
+
+#### Problem:
+1) Once the query resolver starts an operation (Select, Join, Update) and does an index call, it passes the key/value pair(s) to the load-balancer and waits for the responses back. 
+2) Once we get the responses back from the load-balancer, how do we know which threads do these keys belong to? How do we redirect the keys to that thread. 
+
+### Possible Solutions: 
+
+##### Context
+Parser converts the SQL statement into an object of type:
+```cpp
+struct parsedQuery{
+	string client_id="123";
+	string type = "select";
+	string tableName = "table1";
+	vector colToGet = ["age"]; //Can we multiple columns
+	string searchCol = "Name"; //Can filter on a single column.
+	string searchVal = "Haseeb";
+}
+```
+
+###### A:
+Construct a request object for the load-balancer:
+```cpp
+struct loadBalanceRequest{
+	int request_id;
+	int object_id; 
+	vector keys = []; //Fill it with keys
+	vector values = []; //Respond back by filling in values.
+	num_objects = 2; // Say we split the request for 100 keys into two objects of 50 each. 
+	bool finished=false;
+}
+```
+
+When a request comes in, we launch a new thread that gets assigned a queue within a concurrency friendly map. The thread can directly call the load-balancers get interface but has to wait on to get the indexed key back. It then generates the keys for the request and waits once more. 
+
+```cpp
+
+void SelectFunction(request){
+	index_key = request.getIndexKey() //Generate Index key
+	fetchKey(index_key)// Call Loadbalancer to get the key
+
+	while(queue_map[ThreadId].size()==0{}; //Busy wait. 
+	pk_range = queue_map[new_request.id].pop();
+	keyRange,num_objects = generateKeyRange(pk_range) //generate the keys for the object we want.
+	
+	fetchKey(keyRange)//Push to load balancer again. This would be the loadBalanceRequest object. 
+	
+	while(queue_map[ThreadId].size()<num_objects){} //Wait for all objects to come into queue. 
+
+	vector all_pairs;
+	for i in num_objects:
+		obj = queue_map[new_request.id].pop();
+		kvPair = makePairFromObject(obj); //Makes the loadBalanceRequest and make a pair of the k/v lists.
+		all_pairs.push(kvPair);
+
+	respondToClient(all_pairs,reques.client_id);
+	erase(queue_map[ThreadId]); //Cleanup queue memory. 
+}
+
+
+void runQueryResolver(){
+	new_request = recieveQueue.pop() //Get a new request (parsedQuery) object
+	queue_map[new_request.id] = new Queue. 
+	
+	launchNewThread(new_request,SelectFunction) // Assuming we only have select requests, launch new thread.
+} 
+
+void loadBalancReadThread(){
+	while(true){
+		request = loadbalanceRecieveQueue.pop();
+		queue_map[request.id].push(request);
+	}
+}
+
+```
+
+In this case, the thread keeps state of the request and issues/receives `loadBalanceRequest` objects. The load balancer will be responsible for maintaining the object.  (Can this get tricky for repeated keys, or keys that overlap between objects?)
+
+1) Get Request from Parser 
+2) Launch Thread that is responsible for handling query end-to-end. 
+	1) Issues Index Request (if Any)
+	2) Waits for it to respond back.
+	3) Issues request for Keys it wants.
+	4) Waits till it gets all objects. 
+	5) Responds back to client. 
+3) One socket/connection between query resolver/load balancer. 
+
+
+###### B:
+Construct a request object for the load-balancer, but also include the `parsedQuery` object.
+```cpp
+struct loadBalanceRequest{
+	int request_id;
+	int object_id; 
+	vector keys = []; //Fill it with keys
+	vector values = []; //Respond back by filling in values.
+	num_objects = 2; // Say we split the request for 100 keys into two objects of 50 each. 
+	bool finished=false;
+	parsedQuery obj; //Contains the information for the query. Only add it to the first request object. 
+}
+```
+
+When a request comes, we launch a new thread:
+1) If the request will use an index, call the indexer thread. 
+	1) The indexer thread only issues request for the index and terminates. 
+2) The `loadBalancReadThread` :
+	1) Before inserting values into the object, checks if the key already exists (if a thread is currently waiting for more objects).
+	2) If not, it starts the select function (or whatever function is needed for the type). Makes a queue for it and passes the along. 
+	3) The selection function gets all the information it needs and only does the `selection`and not indexing. 
+
+
+
+| A (pro)                                                                                                                      | B(pro)                                                  |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Simpler. Isolated logic. <br>Thread handles query end-to-end.                                                                | More scalable and efficient. Less threads busy waiting. |
+| Less state movement. Query state remains<br>at the query resolver level. Doesn't move <br>around (less data to move around?) | Possibly less contention between threads?               |
+| No hassle in dealing with out-of-order objects                                                                               |                                                         |
+
+
+| A (Cons)                                                                    | B(Cons)                                                  |
+| --------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Not Scalable, We can launch a lot of threads.<br>High chance of contention? | More complicated to implement and ensure synchronization |
+| Lots of threads waiting.                                                    | Overhead of thread launching/closing.                    |
+
+##### ORAM Benchmark
+
+Objective: 
+Substitute the underlying Oblivious Key-Value store and benchmark the system. Try to answer the question:
+If I used another oblivious Key-Value store (Like ORAM), how much of a performance improvement/degrade would I experience?
+
+Assuming the load balancer calls the `sendBatchtoKV` for each executor: 
+
+```cpp
+
+void sendBatchToKV(std::vector<std::string> &keys,std::vector<std::string> &values){
+	if(values.empty()){
+		//Its a Get Request
+		auto response = kvStore.get_batch(keys); //Your function gets called here via RPC.
+		//response is plaintext key-value pairs. 
+	}else{
+		// Its a Put Request.
+		kvStore.put_batch(keys,values); //Your function gets called here.
+		// No response. 
+	}
+}
+
+```
+
+
+
+1) Requirement:
+	* Implement an ORAM system (Path ORAM or some system similar to SEAL) that exposes `get_batch` and `put_batch` interface. 
+	* `get_batch:` takes as input a vector (std::vector<std::string> keys) which is a set of plain-text keys to get from the remote server. 
+	* `put_batch`: takes as input two vectors (keys & values). The remote server update the corresponding keys to the new values. 
+	* Handle logic for missing keys. 
+	* Should be able to deploy multiple servers on separate machines (2-3 ORAM Units?)
+	* Connect to redis K:V store. 
+	* Use same libraries that waffle uses (For RPC calls, connecting to redis and Encryption)
+
+
+
+
