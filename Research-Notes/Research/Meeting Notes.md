@@ -1268,6 +1268,7 @@ Each layer forms a connection in the forward and reverse direction, (One socket 
 ##### Context
 Parser converts the SQL statement into an object of type:
 ```cpp
+select age from table1 where name = haseeb
 struct parsedQuery{
 	string client_id="123";
 	string type = "select";
@@ -1419,4 +1420,15 @@ void sendBatchToKV(std::vector<std::string> &keys,std::vector<std::string> &valu
 
 
 
+* Send SEAL + Waffle report 
+* Work on LB and Query Resolver (with RPCs)
+* Implement A Logic (Sync). 
 
+
+
+* Dependency Logic at resolver
+* Assign timestamp to each Request. 
+* Timestamp ordering of Key Values within each request. 
+* The timestamp determines which request gets which version of the value. 
+* Design a protocol that keeps the versioning in mind. 
+	* Same Request (R(X), W(X), R(X)) --- returns --> (V1,V2,V2).
