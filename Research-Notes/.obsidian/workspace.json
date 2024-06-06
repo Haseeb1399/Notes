@@ -11,11 +11,10 @@
             "id": "040bf28266b9a903",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "diff-view",
               "state": {
-                "file": "Research/Meeting Notes.md",
-                "mode": "source",
-                "source": false
+                "file": "Research-Notes/Research/Meeting Notes.md",
+                "staged": false
               }
             }
           }
@@ -69,7 +68,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -85,7 +85,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Research/Meeting Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +101,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Research/Meeting Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -124,9 +122,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Research/Meeting Notes.md"
-              }
+              "state": {}
             }
           },
           {
@@ -156,9 +152,9 @@
   },
   "active": "040bf28266b9a903",
   "lastOpenFiles": [
-    "Research/updatedFlow.canvas",
-    "Research/SSE.md",
     "Research/Meeting Notes.md",
+    "Research/updatedFlow.canvas",
+    "Research/Query Flow.canvas",
     "Screenshot from 2024-05-15 23-20-46.png",
     "Screenshot from 2024-05-15 23-20-13.png",
     "flamegraph.svg",
@@ -173,6 +169,7 @@
     "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Winter 2024/Slides.md",
     "Winter 2024/CS798 - Multicore Programming.md",
+    "Research/SSE.md",
     "Winter 2024/Demo Reviews.md",
     "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Untitled.canvas",
@@ -182,7 +179,6 @@
     "Research/Segment Tree.md",
     "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
     "Research/Arx.md",
-    "Research/Query Flow.canvas",
     "Research/MySQL Backend.canvas",
     "Research/French Toast.md",
     "Research/Existing SQL databases using KV stores.md",
