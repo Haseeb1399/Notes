@@ -1432,3 +1432,166 @@ void sendBatchToKV(std::vector<std::string> &keys,std::vector<std::string> &valu
 * The timestamp determines which request gets which version of the value. 
 * Design a protocol that keeps the versioning in mind. 
 	* Same Request (R(X), W(X), R(X)) --- returns --> (V1,V2,V2).
+
+
+
+### June 7th 
+
+Issue:
+* We need a total ordering between requests so that we can order them correctly (Request 1 happens before request 2). 
+
+Solution:
+* Have a incrementing `request_id` that acts as the timestamp for the request. 
+
+Simplifying assumption: One request is not broken up into different requests. One Request Object is created per request. 
+
+
+##### Flow of a request:
+1. Generate Request 
+``` cpp
+loadBalancerRequest req = {
+	int "request_id":1,
+	int "object_id":NULL //Not Using
+	int "numObjects":NULL // Not Using
+	vector<string> keys : ["K1","K2","K3","K1","K1"]
+	vector<string> values:["","","","Test",""] // GET GET GET PUT GET 
+}
+
+//Assuming all Keys are initialized to the value "Hello" We should get a response back like:
+{
+	vector<string> keys : ["K1","K2","K3","K1","K1"]
+	vector<string> values:["Hello","Hello","Hello","Test","Test"]
+```
+
+2.  Request Sent to the Load Balancer: 
+
+```cpp
+struct responseGroup{  
+    loadBalanceResponse response;  
+    int total;  //How many are expected.
+    int currentSize;  //How many responses recieved.
+    
+    responseGroup(int tot){  
+        total=tot;  
+        currentSize=0;  
+    }  
+};
+
+void LoadBalanceProxy::addKeys(const sequence_id& seq_id, const loadBalanceRequest& req){  
+    std::vector<std::string> keys = req.keys;  
+    std::vector<std::string> values = req.values;  
+    responseGroup temp = responseGroup(req.keys.size());  //Initialize Size 
+  
+    responseMap[req.request_id]=temp;  //State at the loadbalancer for all requests being processed.
+    sequence_id_cache[req.request_id]=seq_id;  //State at the loadbalancer needed to respond back to client.
+
+	//Hashing keys to Assign them to an executor. 
+    for(int i=0;i<keys.size();i++){  
+        int executorNumber = hashFunc(keys[i]) % numExecutors;  
+        auto pair = std::make_pair(req.request_id,std::make_pair(keys[i], values[i]));  
+        //Each Pair  = (Request_ID: (K:V))
+        executorQueue[executorNumber].push(pair);  
+    }  
+}
+
+```
+
+Here the Load Balancer parses out the keys and setups state for each request. 
+Executors are given the Key:Value pairs along with the request_id this key:value pair belongs to. 
+
+3. Executing a Batch 
+Once all executors reach R requests, we start to execute batches: 
+
+```cpp
+void LoadBalanceProxy::executeBatch(int executorNumber,std::vector<int> reqIds,std::vector<std::pair<std::string, std::string>> kvObjects){  
+	//reqIds is a list of request_ids from which the requests are coming. This is needed to signal another thread. 
+
+    std::vector<std::string> keys;  
+    std::vector<std::string> values;  
+  
+    for(auto &p:kvObjects){  
+        keys.push_back(p.first);  //Parse Out Keys 
+        values.push_back(p.second);  //Parse out corresponding Values/
+    }  
+  
+    //For each executor, we keep a single socket (which remains open). Sending concurrent requests via that causes some  
+    //Issues with thrift internals (-ve frame number). Sync requests here.//This is still incorrect since for multiple pending requests, any of them can aquire a lock (and not sequentially). ToDo: Make it so its sequential (Queue of waiting threads?)
+    
+    executorsRunningBatch[executorNumber].lock();  
+    executor_reply reply  = executors_[executorNumber].execute_batch(keys, values);  
+    executorsRunningBatch[executorNumber].unlock();  
+    // std::cout<<"Executor: "<<executorNumber<<" Got response of size: "<<reply.Keys.size()<<std::endl;  
+  
+    std::vector<std::string> replyKVPair;  
+    std::set<int> uniqueReqIds;  
+  
+    responseMutex.lock();  
+    //Aquire lock so only one thread updates the responseMap at a time
+    for(int i = 0; i<reply.Keys.size();i++){  
+        int curSequent = reqIds[i];  
+        uniqueReqIds.insert(curSequent);  
+        responseMap[curSequent].response.keys.push_back(reply.Keys[i]);  
+        responseMap[curSequent].response.values.push_back(reply.Vals[i]);  
+        responseMap[curSequent].currentSize++;  
+    }  
+    responseMutex.unlock();  
+
+    for (const int& element : uniqueReqIds) {  
+        responseDone.push(element); //Signal that I (the thread) has dealt with these responses.   
+    }
+```
+
+Note: 
+We can have a case where: 
+1. Requests in the same execution (distance between requests < R):
+		Get K1 (Request_Id: 2) 
+		Put K1 (Request_Id: 4)
+		
+	Both these requests get bundled to the same executor.  This is fine since the request for `Get K1` comes before the request for `Put K1` (We use a FIFO queue). The requests in the same order are sent to the executor (which is then responsible for ensuring Linearizability). 
+
+2. Request in different executions (distance between requests > R):
+	Even if different executions handle the same request, the linear order of the request doesn't change. For changes to the same Key, the request that came up first would finish first, then the next request keys would be looked at. 
+
+The lock around the fetching of values `executorsRunningBatch[executorNumber].lock()` also ensures that we don't run two batches concurrently. The batches themselves also are ordered (the order in which the threads where started).
+For example all executors queues have 10 values. If R=5 then its possible we launch two executeBatch threads per executor. This can cause a put request in the second execution to happen before a get in the first execution. The lock ensures that the first execution takes place first, and then only can the second execution take place. 
+
+
+4. Sending back a response:
+```cpp
+void LoadBalanceProxy::checkResponsesFinished() {   
+    while (!done) {  
+        if (responseDone.size() == 0) {  //responseDone is a queue
+            continue;  
+        }  
+        int seq_id = responseDone.pop();  //Pop Element (This queue will populate once an execution of a batch has finished)
+        responseMutex.lock();  
+        //Check if the responses have finished. 
+        if (responseMap[seq_id].total == (responseMap[seq_id].currentSize)) {  
+            id_to_client_->async_respond_client(sequence_id_cache[seq_id], ADD_KEYS, responseMap[seq_id].response);  //Send back the response
+            responseMap.erase(seq_id);  //Clear State from the Loadbalancer for this request.
+            sequence_id_cache.erase(seq_id);  //Clear State
+        }  
+        responseMutex.unlock();  
+    }  
+}
+```
+
+For example if `request_id 1` was split between Executor 1 and Executor 2. Executor 1 will push `1` into the `responseDone` queue. This loop will check and see that the responses are not yet complete. Once Executor 2 finishes, it will also push `1` into the queue. This time the loop sees that all keys within the request have been completed and sends back the response. 
+
+
+Overall if we have: 
+1. Two Selects running concurrently --> No conflicts.
+2. Update And Select (Update then select) --> Update runs before select. (Select sees the changes made by Update)
+3. Select and then Update (Select then Update) --> Select does not see the update. 
+
+Any more edge cases we can think of?
+
+
+Next steps:
+* Replace naive locking with ordered thread access. 
+* Add timeout logic for executor queues. 
+* Implement index and select on query Resolver. Test for correctness. 
+
+
+
+

@@ -8,13 +8,14 @@
         "type": "tabs",
         "children": [
           {
-            "id": "040bf28266b9a903",
+            "id": "ed6e31b7e03f4e6c",
             "type": "leaf",
             "state": {
-              "type": "diff-view",
+              "type": "markdown",
               "state": {
-                "file": "Research-Notes/Research/Coding ToDos.md",
-                "staged": false
+                "file": "Research/Meeting Notes.md",
+                "mode": "source",
+                "source": false
               }
             }
           }
@@ -68,7 +69,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -84,6 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Research/Meeting Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -100,6 +103,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Research/Meeting Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -121,7 +125,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "Research/Meeting Notes.md"
+              }
             }
           },
           {
@@ -149,8 +155,9 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "040bf28266b9a903",
+  "active": "ed6e31b7e03f4e6c",
   "lastOpenFiles": [
+    "conflict-files-obsidian-git.md",
     "Research/Coding ToDos.md",
     "Research/Meeting Notes.md",
     "Research/updatedFlow.canvas",
