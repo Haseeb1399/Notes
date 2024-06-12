@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "6b4491b7c3b4cc04",
+        "id": "17478655dc39d442",
         "type": "tabs",
         "children": [
           {
-            "id": "ed6e31b7e03f4e6c",
+            "id": "5433b751cdc96e54",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -155,13 +155,12 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "ed6e31b7e03f4e6c",
+  "active": "8909dc3d46afbb30",
   "lastOpenFiles": [
-    "conflict-files-obsidian-git.md",
     "Research/Coding ToDos.md",
     "Research/Meeting Notes.md",
     "Research/updatedFlow.canvas",
-    "Research/SSE.md",
+    "Research/Query Flow.canvas",
     "Screenshot from 2024-05-15 23-20-46.png",
     "Screenshot from 2024-05-15 23-20-13.png",
     "flamegraph.svg",
@@ -176,6 +175,7 @@
     "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Winter 2024/Slides.md",
     "Winter 2024/CS798 - Multicore Programming.md",
+    "Research/SSE.md",
     "Winter 2024/Demo Reviews.md",
     "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Untitled.canvas",
@@ -185,7 +185,6 @@
     "Research/Segment Tree.md",
     "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
     "Research/Arx.md",
-    "Research/Query Flow.canvas",
     "Research/MySQL Backend.canvas",
     "Research/French Toast.md",
     "Research/Existing SQL databases using KV stores.md",

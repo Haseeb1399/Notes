@@ -1499,7 +1499,7 @@ void LoadBalanceProxy::addKeys(const sequence_id& seq_id, const loadBalanceReque
 Here the Load Balancer parses out the keys and setups state for each request. 
 Executors are given the Key:Value pairs along with the request_id this key:value pair belongs to. 
 
-3. Executing a Batch 
+3. Executing a Batch (Give a batch an id and order responses accordingly. Remove Lock)
 Once all executors reach R requests, we start to execute batches: 
 
 ```cpp
@@ -1594,4 +1594,10 @@ Next steps:
 
 
 
+
+
+In the executor, ensure ordering by giving each batch a number and processing them in that order. Do this with the Plaintext keyvalue store and waffle
+
+Discussion after she comes back.
+* Discussion on inserts/deletes and updates on changing Outsourced N. (The discussion on dynamically changing alpha.)
 
