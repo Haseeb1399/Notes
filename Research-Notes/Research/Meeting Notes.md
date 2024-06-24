@@ -1602,4 +1602,39 @@ Discussion after she comes back.
 
 ## June 24
 
+Issue: Thrift isn't thread safe. We cannot have a single service/process send multiple concurrent requests (over the same socket) to another service (RPC call). 
+
+Solution: 
+
+[gRPC](https://grpc.io/docs/what-is-grpc/core-concepts/)
+* more recent rpc framework. CockroachDB also uses it. 
+* Support for C++ as well as go. 
+* Supports bi-directional streaming as well. 
+* Sync and Async Calls 
+* **Great Documentation**
+
+Unary RPC: 
+* Client sends a single request and gets back a single response. 
+Server Streaming RPC:
+* Client sends a single request and server returns a stream of messages in response. (Example: Stock Prices/Ticker)
+Client Streaming RPC:
+* Client sends a stream of messages to the server instead of a single message. It commits once messages finish. Server responds with a single message. (Example: Uploading a file)
+Bidirectional RPC: 
+* Two independent streams, Client streams messages to server and server streams messages to client. (Example: Multiplayer Gaming)
+
+Within Go (sync): 
+
+Each RPC handler attached to a registered server will be invoked in its own goroutine. For example, [SayHello](https://github.com/grpc/grpc-go/blob/master/examples/helloworld/greeter_server/main.go#L41) will be invoked in its own goroutine. The same is true for service handlers for streaming RPCs, as seen in the route guide example [here](https://github.com/grpc/grpc-go/blob/master/examples/route_guide/server/server.go#L126). Similar to clients, multiple services can be registered to the same server.
+
+
+Within C++ (Sync):
+[ref](https://groups.google.com/g/grpc-io/c/Cul6fd7cOB0)
+Uses a thread pool to manage multiplexing requests. 
+
+
+Benchmark:
+[ref](https://github.com/chrislee87/rpc_benchmark/tree/master)
+Long Connection --> One connection for a client to do all RPCs
+Short Connection --> One Connection for each RPC call. 
+![[Pasted image 20240624105115.png]]
 
