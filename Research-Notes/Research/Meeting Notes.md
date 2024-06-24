@@ -1593,11 +1593,13 @@ Next steps:
 * Implement index and select on query Resolver. Test for correctness. 
 
 
-
-
-
 In the executor, ensure ordering by giving each batch a number and processing them in that order. Do this with the Plaintext keyvalue store and waffle
 
 Discussion after she comes back.
 * Discussion on inserts/deletes and updates on changing Outsourced N. (The discussion on dynamically changing alpha.)
+
+
+
+## June 24
+
 
