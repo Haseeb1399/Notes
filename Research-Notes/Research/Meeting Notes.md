@@ -1638,3 +1638,48 @@ Long Connection --> One connection for a client to do all RPCs
 Short Connection --> One Connection for each RPC call. 
 ![[Pasted image 20240624105115.png]]
 
+$A$ = 1
+$B$ = 1
+$C$ = 1 
+
+$B_1$ = [R(A),R(B),W(A),R(C)] --> Result [1,1,3,1]
+$A$ = 3
+$B$ = 1
+$C$ = 1 
+
+$B_2$ = [R(C),R(B),R(A)] --> Result [1,1,3]
+$B_3$ = [R(D),R(F),R(X)] 
+
+
+$B_1$ ,$B_2$ and $B_3$ issued in parallel. B2 Depends on B1 so Serialize as: $B_1$ ---> $B_2$. But $B_1$ and $B_3$ can run in parallel. 
+
+Possible Solutions: 
+
+At Query Resolver:
+Stick with this solution. 
+* Keeps global state on records being processed by threads (And what Keys). Thread that issues B2 waits to issue requests. (We can have possible deadlocks? Thread ends up waiting for a long time to issue the request) --> Leads to deadlock. 
+* Make a precedence graph (Shared amongst threads?) Add and remove nodes as threads request and receive responses. 
+	* Higher priority 
+
+
+TPCC Requests --> TPC-C Look at their requests and see how that maps out with this. 
+Number of Keys per query --> Construct stats on number of keys generated. 
+Deadlocking mechanism. 
+
+At Executor: 
+Can't assume anything about Network. Don't use this. 
+Relying on the fact that $B_1$ comes before $B_2$ to the executor. We keep state on all keys being currently written (We will only conflict if there is a W(X),R(X)). The go routine that launches for B1 inserts W(A) to this state. Go routine for B2 checks if any of its keys have membership in this state. If they do, pause until the membership expires/finishes, Otherwise continue with execution. 
+
+Removing the assumption that $B_1$ comes before $B_2$, Executor now keeps track of request ids it has seen (they will always be incrementing). If it sees any out of order request, it launches a go routine to handle the request but waits till it can execute. 
+For example:
+
+Requests 1,2,3 arrive to the executor in the order 1,3,2.
+Executor is expecting 1 (it knows the id for the next request since its current+1). It will launch a routine for req 1 and process.
+Executor gets 3, it was expecting 2. It launches the routine but waits.
+Executor gets 2, it was expecting this request, launches routine and processes it. It will increment current counter and this would signal the routine responsible for req 3 to process. 
+
+Then 2 and 3 can occur concurrently if there are no conflicts. 
+
+
+
+Come back to serialization after we are done with Selects (Ranges, Joins). (Make Note on ToDo)

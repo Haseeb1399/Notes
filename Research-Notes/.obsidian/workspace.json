@@ -4,16 +4,18 @@
     "type": "split",
     "children": [
       {
-        "id": "17478655dc39d442",
+        "id": "0762302708e33a61",
         "type": "tabs",
         "children": [
           {
-            "id": "5433b751cdc96e54",
+            "id": "dbe097a79939e147",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "markdown",
               "state": {
-                "file": "Images/Pasted image 20240624105115.png"
+                "file": "Research/Meeting Notes.md",
+                "mode": "source",
+                "source": false
               }
             }
           }
@@ -67,7 +69,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -83,7 +86,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Images/Pasted image 20240624105115.png",
+                "file": "Research/Meeting Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -100,7 +103,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Images/Pasted image 20240624105115.png",
+                "file": "Research/Meeting Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -123,7 +126,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Images/Pasted image 20240624105115.png"
+                "file": "Research/Meeting Notes.md"
               }
             }
           },
@@ -152,7 +155,7 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "99fd19eb00cbd149",
+  "active": "dbe097a79939e147",
   "lastOpenFiles": [
     "Research/Meeting Notes.md",
     "Images/Pasted image 20240624105115.png",
