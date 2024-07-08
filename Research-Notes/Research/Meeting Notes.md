@@ -802,6 +802,7 @@ In the parsing module, we want to only parse the SQL statement into a Abstract S
 
 #### 3) Query Resolver 
 
+//Use boolean --> Use Range Index --> True (Fetch and use Index instead of point queries)
 `doSelect(tableName,colList,searchColumn,searchValue)` //Works for range as well. searchValue would just be a list (min,max)
 For example: 
 `select * from table1` --> `doSelect(table1,all,NULL,NULL)`
@@ -1683,3 +1684,17 @@ Then 2 and 3 can occur concurrently if there are no conflicts.
 
 
 Come back to serialization after we are done with Selects (Ranges, Joins). (Make Note on ToDo)
+
+
+
+1) With scaling how are you doing security.
+2) Up to date load balancing techniques --> 
+	1) Do we call it a load balancer or something else? 
+	2) It is needed for security guarantees, Mainly. In high throughput scene it can be beneficial. 
+3) In what cases would moving keys be beneficial. 
+	1) Is it beneficial to have these keys in a separate proxy or in a single proxy. 
+	2) 2 keys in one proxy, vs 1 key each proxy.
+	3) Justify why we aren't moving keys, and why it works. 
+4) Don't make changes to stash. 
+	1) All these proxies (ORAM) have a cache.
+	2) Padding to the next power of 2 in ORAM executor (SEAL).
