@@ -1688,8 +1688,8 @@ Come back to serialization after we are done with Selects (Ranges, Joins). (Make
 
 
 1) With scaling how are you doing security.
-2) Up to date load balancing techniques --> 
-	1) Do we call it a load balancer or something else? 
+2) Up to date load balancing techniques -->
+	1) Do we call it a load balancer or something else?
 	2) It is needed for security guarantees, Mainly. In high throughput scene it can be beneficial. 
 3) In what cases would moving keys be beneficial. 
 	1) Is it beneficial to have these keys in a separate proxy or in a single proxy. 
