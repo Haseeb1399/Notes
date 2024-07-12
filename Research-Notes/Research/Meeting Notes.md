@@ -1834,3 +1834,15 @@ Comments:
 * No Joins. 
 
 
+Benchbase was used by Obladi (it was previously called oltp bench, https://github.com/oltpbenchmark/oltpbench/). There is a paper on this as well which we can cite. Benchbase is the newer version. 
+
+Other benchmarks from Benchbase:
+1. Epinions:
+	1. https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/epinions/procedures/GetAverageRatingByTrustedUser.java
+
+2. Hyapt:
+	1. https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/hyadapt/procedures/MaxRecord1.java
+3. OT-Metrics:
+	1. https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/otmetrics/procedures/GetSessionRange.java
+	2. This has an IN clause, which we can also convert to a set of point OR filters.
+4. 
