@@ -1698,3 +1698,139 @@ Come back to serialization after we are done with Selects (Ranges, Joins). (Make
 4) Don't make changes to stash. 
 	1) All these proxies (ORAM) have a cache.
 	2) Padding to the next power of 2 in ORAM executor (SEAL).
+
+
+
+## July 11th 
+
+
+#### Big Data Benchmark:
+Query 1:
+
+```
+SELECT pageURL, pageRank FROM rankings WHERE pageRank > X
+```
+Comments: 
+* We can do this with the current logic selection function we have. 
+
+Query 2:
+````
+SELECT SUBSTR(sourceIP, 1, X), SUM(adRevenue) FROM uservisits GROUP BY SUBSTR(sourceIP, 1, X)
+````
+
+Comments: 
+* Substr extracts the the substring from sourceIP from position 1 to X. 
+* Then groups the extracted string, and sum of adRevenue. 
+* a Row might look like : 127.0 - 1000 (X = 5)
+* We can do something similar by fetching the entire columns and then aggregating and grouping by?
+
+Query 3: 
+```
+SELECT sourceIP, totalRevenue, avgPageRank
+FROM
+  (SELECT sourceIP,
+          AVG(pageRank) as avgPageRank,
+          SUM(adRevenue) as totalRevenue
+    FROM Rankings AS R, UserVisits AS UV
+    WHERE R.pageURL = UV.destURL
+       AND UV.visitDate BETWEEN Date(`1980-01-01') AND Date(`X')
+    GROUP BY UV.sourceIP)
+  ORDER BY totalRevenue DESC LIMIT 1
+
+An equivalent could be:
+
+SELECT UV.sourceIP, 
+       SUM(R.adRevenue) as totalRevenue, 
+       AVG(R.pageRank) as avgPageRank
+FROM Rankings AS R
+JOIN UserVisits AS UV
+  ON R.pageURL = UV.destURL
+WHERE UV.visitDate BETWEEN Date('1980-01-01') AND Date('X')
+GROUP BY UV.sourceIP
+ORDER BY totalRevenue DESC
+LIMIT 1;
+
+
+```
+Comments:
+* Scanned through ObliDB source code, This query is broken down into functions I think, can't exactly point to where this query is happening. Inferred this from the test file that is available. 
+* Few points in this query:
+	* Join is within a sub query,
+	* Aggregates upon a join. 
+	* We can convert the date to a range query. But we need to cater to the date type (day wraps around and increments month)
+	* We can do this by:
+		* First using join map on pageUrl & destUrl, fetch index for visitDate (range to point queries). Take out intersection.
+		* For these primary-keys, fetch source ip, pageRank and adRevenue, group by source IP and calculate aggregates
+		* Order the items by totalRevenue and return the first item.
+
+
+#### TPC-C 
+
+#### New Order Transaction 
+
+```
+SELECT C_DISCOUNT, C_LAST, C_CREDIT
+    FROM customers
+    WHERE C_W_ID = ?
+    AND C_D_ID = ?
+    AND C_ID = ?
+
+SELECT W_TAX
+	FROM warehouses
+    WHERE W_ID = ?
+
+SELECT D_NEXT_O_ID, D_TAX
+    FROM district
+    WHERE D_W_ID = ? AND D_ID = ? FOR UPDATE
+```
+
+For Update locks the selected rows for a transaction. 
+
+```
+INSERT INTO newOrder
+    (NO_O_ID, NO_D_ID, NO_W_ID)
+    VALUES ( ?, ?, ?)
+         
+
+UPDATE district
+    SET D_NEXT_O_ID = D_NEXT_O_ID + 1
+    WHERE D_W_ID = ?
+    AND D_ID = ?
+
+INSERT INTO openOrders
+    (O_ID, O_D_ID, O_W_ID, O_C_ID, O_ENTRY_D, O_OL_CNT, O_ALL_LOCAL)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+
+SELECT I_PRICE, I_NAME , I_DATA
+    FROM item
+    WHERE I_ID = ?
+
+SELECT S_QUANTITY, S_DATA, S_DIST_01, S_DIST_02, S_DIST_03, S_DIST_04, S_DIST_05,
+    S_DIST_06, S_DIST_07, S_DIST_08, S_DIST_09, S_DIST_10
+        FROM stock
+        WHERE S_I_ID = ?
+        AND S_W_ID = ? FOR UPDATE
+
+UPDATE stock
+    SET S_QUANTITY = ? ,
+        S_YTD = S_YTD + ?,
+        S_ORDER_CNT = S_ORDER_CNT + 1,
+        S_REMOTE_CNT = S_REMOTE_CNT + ?
+    WHERE S_I_ID = ?
+    AND S_W_ID = ?
+
+INSERT INTO %s
+	    (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO)
+        VALUES (?,?,?,?,?,?,?,?,?)
+```
+
+Rest are here: 
+https://github.com/cmu-db/benchbase/blob/aee8929cfe2fd34335f18c505b7303b7e7cda243/src/main/java/com/oltpbenchmark/benchmarks/tpcc/procedures/Delivery.java
+
+Comments: 
+* Most of the queries follow the same pattern (selections of a bunch of columns using filters)
+* Stock count transaction has a count distinct aggregate
+* Delivery has a delete query and a sum query (both using filters)
+* No Joins. 
+
+

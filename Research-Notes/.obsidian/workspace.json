@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "0762302708e33a61",
+        "id": "4ad321a77c0bc557",
         "type": "tabs",
         "children": [
           {
-            "id": "dbe097a79939e147",
+            "id": "dd0f1bc87146a84e",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -16,16 +16,6 @@
                 "file": "Research/Meeting Notes.md",
                 "mode": "source",
                 "source": false
-              }
-            }
-          },
-          {
-            "id": "d85048c055889c41",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.6.5"
               }
             }
           }
@@ -79,8 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -165,27 +154,28 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "dbe097a79939e147",
+  "active": "8909dc3d46afbb30",
   "lastOpenFiles": [
-    "Research/Meeting Notes.md",
-    "Images/Pasted image 20240624105115.png",
-    "Research/Coding ToDos.md",
-    "Research/updatedFlow.canvas",
-    "Research/Query Flow.canvas",
     "Images/Screenshot from 2024-05-15 23-20-46.png",
     "Images/Screenshot from 2024-05-15 23-20-13.png",
-    "flamegraph.svg",
     "Images/Screenshot from 2024-04-23 21-45-40.png",
     "Images/Screenshot from 2024-04-23 19-03-57.png",
+    "Images/Pasted image 20240624105115.png",
+    "Research/Meeting Notes.md",
+    "Research/SSE.md",
+    "Research/Coding ToDos.md",
+    "conflict-files-obsidian-git.md",
+    "Research/updatedFlow.canvas",
+    "Screenshot from 2024-05-15 23-20-46.png",
+    "Screenshot from 2024-05-15 23-20-13.png",
+    "flamegraph.svg",
+    "Screenshot from 2024-04-23 21-45-40.png",
+    "Screenshot from 2024-04-23 19-03-57.png",
     "Images/Screenshot from 2024-04-19 01-20-22.png",
-    "Images/Screenshot from 2024-04-19 01-19-46.png",
-    "Images/Screenshot from 2024-04-19 01-16-09.png",
-    "Images/Screenshot from 2024-04-19 01-15-08.png",
     "Winter 2024/Project CS 848.md",
     "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Winter 2024/Slides.md",
     "Winter 2024/CS798 - Multicore Programming.md",
-    "Research/SSE.md",
     "Winter 2024/Demo Reviews.md",
     "Winter 2024/CS 848 - Section 2 (Privacy enhancing data systems).md",
     "Untitled.canvas",
@@ -195,6 +185,7 @@
     "Research/Segment Tree.md",
     "Research/Multi-Dimensional Indexes for Point and Range queries on outsourced encrypted data..md",
     "Research/Arx.md",
+    "Research/Query Flow.canvas",
     "Research/MySQL Backend.canvas",
     "Research/French Toast.md",
     "Research/Existing SQL databases using KV stores.md",
