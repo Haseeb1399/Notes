@@ -1819,7 +1819,7 @@ UPDATE stock
     WHERE S_I_ID = ?
     AND S_W_ID = ?
 
-INSERT INTO %s
+INSERT INTO orders
 	    (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO)
         VALUES (?,?,?,?,?,?,?,?,?)
 ```
@@ -1839,10 +1839,31 @@ Benchbase was used by Obladi (it was previously called oltp bench, https://githu
 Other benchmarks from Benchbase:
 1. Epinions:
 	1. https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/epinions/procedures/GetAverageRatingByTrustedUser.java
-
 2. Hyapt:
 	1. https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/hyadapt/procedures/MaxRecord1.java
 3. OT-Metrics:
 	1. https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/otmetrics/procedures/GetSessionRange.java
 	2. This has an IN clause, which we can also convert to a set of point OR filters.
-4. 
+
+
+
+
+
+Convert tracefile to epinions database.
+Use that dataset and queries as a template and create selection function
+
+
+
+
+`SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?"` --> Aggregate over join
+`SELECT avg(rating) FROM review r WHERE r.i_id=?` --> Agg over point query
+
+`SELECT * FROM review r, item i WHERE i.i_id = r.i_id and r.i_id=?  ORDER BY rating DESC, r.creation_date DESC LIMIT 10;` --> Join query with an Order BY.
+`SELECT * FROM review r, useracct u WHERE u.u_id = r.u_id AND r.u_id=? ORDER BY rating DESC, r.creation_date DESC LIMIT 10` --> Join query with an Order BY
+Perf difference between the two joins (Maybe different table sizes?)
+As is
+
+
+
+`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC` -->Simple Selection with Order by
+Change this to --> `SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Range query on creation_date. (Add index on creation_date)
