@@ -1859,11 +1859,22 @@ Use that dataset and queries as a template and create selection function
 `SELECT avg(rating) FROM review r WHERE r.i_id=?` --> Agg over point query
 
 `SELECT * FROM review r, item i WHERE i.i_id = r.i_id and r.i_id=?  ORDER BY rating DESC, r.creation_date DESC LIMIT 10;` --> Join query with an Order BY.
+
 `SELECT * FROM review r, useracct u WHERE u.u_id = r.u_id AND r.u_id=? ORDER BY rating DESC, r.creation_date DESC LIMIT 10` --> Join query with an Order BY
 Perf difference between the two joins (Maybe different table sizes?)
 As is
 
 
 
-`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC` -->Simple Selection with Order by
+ -->Simple Selection with Order by
 Change this to --> `SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Range query on creation_date. (Add index on creation_date)
+
+
+Done: 
+
+`SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Trade off of range to point. 
+`SELECT avg(rating) FROM review r WHERE r.i_id=?`
+
+Do Next:
+
+`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC`
