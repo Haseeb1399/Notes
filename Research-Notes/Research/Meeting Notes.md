@@ -1874,7 +1874,17 @@ Done:
 
 `SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Trade off of range to point. 
 `SELECT avg(rating) FROM review r WHERE r.i_id=?`
+`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC`
 
 Do Next:
 
-`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC`
+
+
+//Finish up these joins with Join map, and then work on join with one item with index on the join column.
+
+
+
+
+Possible Benchmark:
+* Memory Benchmark of Postgres and our resolver program. Hopefully Memory footprint of resolver << Postgres (In Memory storage)
+* 
