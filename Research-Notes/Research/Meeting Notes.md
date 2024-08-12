@@ -1879,12 +1879,82 @@ Done:
 Do Next:
 
 
-
 //Finish up these joins with Join map, and then work on join with one item with index on the join column.
-
-
-
 
 Possible Benchmark:
 * Memory Benchmark of Postgres and our resolver program. Hopefully Memory footprint of resolver << Postgres (In Memory storage)
-* 
+
+
+
+#### Benchmarking Client
+
+Preliminary: 
+* A script that will launch executor proxies and the load balancer. The script will read a configuration file that contains the IP addresses and port numbers of all necessary machines and launch the appropriate programs (via ssh). This script  initialize the Database (pass the trace through the load balancer). It will also launch the resolver. 
+
+Benchmarking Client: 
+* The program would take as input, the amount of time (in seconds) to run the experiment. 
+* The program will first connect to the load balancer and make a deterministic request.  For our trace, we will hard-code it in a config file, but for custom traces a user can make changes. 
+* The program will then read a "warmUp Queries" trace file. This contains a random selection of queries, each requesting < R K/V pairs. We do this so that the load balancer is in some "random steady state". 
+* Benchmarking will begin after the warmup. Each Benchmark will consist of :
+	  1. Reading an Experiment Trace. 
+	  2. Running the queries indefinitely (in a while true loop) till time runs out. 
+	  3. Count the number of queries that were successfully completed. Completion is signified by a response back from the resolver.
+* Throughput would be the # of queries completed in a specific time period. (Completed Queries/Time spent). We can also keep a track of how many K/V pairs are fetched, but not sure how that would be useful. 
+
+* Each experiment trace is a set of queries we want to run. For the queries on the Epinions Dataset above, we can have the following experiments: 
+
+1. Simple Selection: ``SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC``
+	1. Generate a list of queries over the entire `i_id` space. 
+	2. Conduct Experiment With and Without an Index on `i_id`. 
+2. Date Range Selection ``SELECT * from review r where creation_date between <Day 1> and <Day 2>`
+	1. Generate a list of queries for random days (within the bounds of the created data). 
+	2. Conduct Experiment With and Without an index on creation_date. 
+3. Average Aggregate ``SELECT avg(rating) FROM review r WHERE r.i_id=?``
+	1. Generate a list of queries over the entire `i_id` space. 
+	2. Conduct experiment with and without an index on `i_id`. 
+4. Joins `SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?`
+	1. Generate a list of queries over the entire `i_id` and `source_u_id` space. 
+	2. Conduct and experiment for the following cases:
+		1. With a join map on `r.u_id=target_u_id` and indexes on `i_id` and `source_u_id`
+		2. With a join map but only one on the indexes (either one) is present. 
+		3. Without a join map but both indexes are present.
+		4. Without a join map and without any indexes (Scan both tables and join)
+	3. Same cases apply to other joins. 
+
+
+For doing experiments with and without indexes/join maps, we can approach it the following way:
+1. We have different metadata files for each experiment. This metadata files dictates the control flow of the resolver. For example, for Simple Selection, we can have two metaData files. `Select_with_index` will have `i_id` in the list of indexes for the `review` table. In `Selection_without_index` the list of indexes for `review` will be empty. This will force the resolver to go through the "Column does not have an index" route of the code.
+2. This saves us from having to re-initialize the input trace file again and again. We can initialize the DB with a large trace file that contains all index information.
+3. This also gives us a good way to check if obliviousness is being guaranteed. We can:
+	1. Run an Experiment that does not query an index. (Mimics a skewed workload). 
+		1. We can check how many times we see keys in the load_balancer with the `tableName_index` in its key (Since we know the client isn't asking for this key).
+	2. Run an Experiment that does query an index:
+		1. This mimics a correlated query workload (since an index on a table is more likely to be access along with the table key/values). 
+		2. Calculate Alpha similar to how waffle does it. 
+4. Experiments on Obliviousness can reinforce the claim that our components on top of the oblivious data store do not compromise security and that waffle can handle multi-maps as stated in that paper. (Points on how this is an improvement upon pancake etc). 
+
+
+
+
+Other performance Experiments:
+
+1. Performance Benchmark of another Relational Database against our Resolver component:
+	1. General Goal: Our goal would be to understand how our resolver component compares against an existing database engine. 
+	2. Issues:
+		1. In our case, the resolver (Our Engine) resides on a different machine, and accesses the data it needs to filter on via the network. 
+		2. Any database engine (Postgres, Sqlite) runs (usually) on the same machine. It would either do I/O with disk (Postgres, Sqlite) or maintain an in-memory database(Sqlite). 
+		3. In terms of total execution time, we will always have worse performance (network latency + decryption + overhead for executor and loadbalancer)
+	3. We can do the following:
+		1. In-Memory databases are constrained by the amount of ram available on the device. We can argue that this solution is fast, but constrained on the amount of RAM on the device. We can benchmark a large database (say 90% of the RAM size of the machine) against our resolver (which offloads the data). Point to prove: Our solution isn't constrained to memory availability on the client. None of the three components (Resolver, LoadBalancer & Executor) need that much memory to run. 
+		2. We can also have SQLite run normally (not in-memory) and again try to benchmark both programs on database sizes larger than the machines ram. 
+	4. Performance Stats: Memory used while processing queries (Write a benchmark client for Sqlite in Go and run the same traces). 
+
+2. Single Query Breakdown: 
+	1. For each of the supported queries, we can breakdown how much of the latency is due to the network and how much due to our overhead. Argue about having edge deployments being more beneficial and can reduce latency.
+3. Scalability Benchmark:
+	1. Run benchmark described above, scaling # of executors in the system. Couple this with Changing R (Keeping workload the same). Discuss how scaling executor proxies can impact Alpha in our case. Example: If we add more executors, we have to wait for more requests to fill up executors (more bins than the system). To mitigate this, we can reduce R (the height of the bins). Changing R will impact executors (if we decide to keep R at executor and loadbalancer the same). Changing R will have an impact on Alpha. Do we reach an optimal point in terms of performance and security? 
+4. Proxy Cache impact on performance:
+	1. Depending on # of proxies, it is possible we cache the index for at-least $\beta$ accesses at the executor. Can we somehow measure the impact of this? 
+
+ 
+
