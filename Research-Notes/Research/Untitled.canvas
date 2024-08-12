@@ -1,0 +1,14 @@
+{
+	"nodes":[
+		{"id":"a0e6696591b3311d","x":-120,"y":-200,"width":250,"height":60,"type":"text","text":"Cloud (Tem90)"},
+		{"id":"fe913f57b26e543f","x":-120,"y":-60,"width":250,"height":60,"type":"text","text":"Executor (Tem91)"},
+		{"id":"990573ddcefd7e4f","x":-120,"y":100,"width":280,"height":100,"type":"text","text":"Resolver + LB (Tem92)"},
+		{"id":"2843eaf2020485b7","x":180,"y":-140,"width":250,"height":60,"type":"text","text":"10 MS latency"},
+		{"id":"659e70cdaa31606a","x":-105,"y":280,"width":250,"height":60,"type":"text","text":"Benchmarking Client"}
+	],
+	"edges":[
+		{"id":"8409d0287d9046ee","fromNode":"a0e6696591b3311d","fromSide":"bottom","toNode":"fe913f57b26e543f","toSide":"top"},
+		{"id":"7f1c803a3a9d7b40","fromNode":"fe913f57b26e543f","fromSide":"bottom","toNode":"990573ddcefd7e4f","toSide":"top"},
+		{"id":"0f11993aa776b5b6","fromNode":"659e70cdaa31606a","fromSide":"top","toNode":"990573ddcefd7e4f","toSide":"bottom"}
+	]
+}

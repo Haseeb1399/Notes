@@ -69,8 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -157,6 +156,7 @@
   },
   "active": "dd0f1bc87146a84e",
   "lastOpenFiles": [
+    "Research/Untitled.canvas",
     "Research/Meeting Notes.md",
     "Images/Screenshot from 2024-05-15 23-20-46.png",
     "Images/Screenshot from 2024-05-15 23-20-13.png",

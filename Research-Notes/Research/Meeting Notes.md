@@ -1890,29 +1890,35 @@ Possible Benchmark:
 
 Preliminary: 
 * A script that will launch executor proxies and the load balancer. The script will read a configuration file that contains the IP addresses and port numbers of all necessary machines and launch the appropriate programs (via ssh). This script  initialize the Database (pass the trace through the load balancer). It will also launch the resolver. 
+* Logging Flag --> If true then start logging some state within the programs (K/V pairs fetched etc). 
 
 Benchmarking Client: 
 * The program would take as input, the amount of time (in seconds) to run the experiment. 
-* The program will first connect to the load balancer and make a deterministic request.  For our trace, we will hard-code it in a config file, but for custom traces a user can make changes. 
-* The program will then read a "warmUp Queries" trace file. This contains a random selection of queries, each requesting < R K/V pairs. We do this so that the load balancer is in some "random steady state". 
+* The program will first connect to the resolver and make a deterministic request.  For our trace, we will hard-code it in a config file, but for custom traces a user can make changes. (separate out as Unit tests). 
+* The program will then read a "warmUp Queries" trace file. This contains a random selection of queries from the trace. We do this so that the load balancer is in some "random steady state". 
+	* Issue warmup queries and don't wait for all of their responses. 
+	* **Try different iterations of how to do warmup.** Different ways to start warmup queries and see if there is a noticeable difference. 
 * Benchmarking will begin after the warmup. Each Benchmark will consist of :
-	  1. Reading an Experiment Trace. 
+	  1. Reading an Experiment Trace. (The same trace file). 
 	  2. Running the queries indefinitely (in a while true loop) till time runs out. 
 	  3. Count the number of queries that were successfully completed. Completion is signified by a response back from the resolver.
-* Throughput would be the # of queries completed in a specific time period. (Completed Queries/Time spent). We can also keep a track of how many K/V pairs are fetched, but not sure how that would be useful. 
+* Throughput would be the # of queries completed in a specific time period. (Completed Queries/Time spent). We can also keep a track of how many K/V pairs are fetched, but not sure how that would be useful.
+
 
 * Each experiment trace is a set of queries we want to run. For the queries on the Epinions Dataset above, we can have the following experiments: 
 
-1. Simple Selection: ``SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC``
-	1. Generate a list of queries over the entire `i_id` space. 
+1. **Missing General Case. Add that**. Make sure that we don't do IO with file (not waiting for queries from the file. Keep them in memory)
+
+3. Simple Selection: ``SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC``
+	1. Generate a list of queries over the entire `i_id` space (Create a random trace file, not linear).  
 	2. Conduct Experiment With and Without an Index on `i_id`. 
-2. Date Range Selection ``SELECT * from review r where creation_date between <Day 1> and <Day 2>`
+4. Date Range Selection ``SELECT * from review r where creation_date between <Day 1> and <Day 2>`
 	1. Generate a list of queries for random days (within the bounds of the created data). 
 	2. Conduct Experiment With and Without an index on creation_date. 
-3. Average Aggregate ``SELECT avg(rating) FROM review r WHERE r.i_id=?``
-	1. Generate a list of queries over the entire `i_id` space. 
+5. Average Aggregate ``SELECT avg(rating) FROM review r WHERE r.i_id=?``
+	1. Generate a list of queries over the entire `i_id` space. (Create a random trace file, not linear).  
 	2. Conduct experiment with and without an index on `i_id`. 
-4. Joins `SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?`
+6. Joins `SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?`
 	1. Generate a list of queries over the entire `i_id` and `source_u_id` space. 
 	2. Conduct and experiment for the following cases:
 		1. With a join map on `r.u_id=target_u_id` and indexes on `i_id` and `source_u_id`
@@ -1920,23 +1926,29 @@ Benchmarking Client:
 		3. Without a join map but both indexes are present.
 		4. Without a join map and without any indexes (Scan both tables and join)
 	3. Same cases apply to other joins. 
-
+		* Remove the filters, and Only do joins with join map, having an index on one of the join columns and (no index, no join map)
 
 For doing experiments with and without indexes/join maps, we can approach it the following way:
+--> Reinitialize the Database without the index files because then the db size is smaller. 
+--> If we keep the same large db size, it can be unfair for the non-index test. So keep the different metadata logic but also reinit the DBs. 
+
 1. We have different metadata files for each experiment. This metadata files dictates the control flow of the resolver. For example, for Simple Selection, we can have two metaData files. `Select_with_index` will have `i_id` in the list of indexes for the `review` table. In `Selection_without_index` the list of indexes for `review` will be empty. This will force the resolver to go through the "Column does not have an index" route of the code.
 2. This saves us from having to re-initialize the input trace file again and again. We can initialize the DB with a large trace file that contains all index information.
 3. This also gives us a good way to check if obliviousness is being guaranteed. We can:
-	1. Run an Experiment that does not query an index. (Mimics a skewed workload). 
-		1. We can check how many times we see keys in the load_balancer with the `tableName_index` in its key (Since we know the client isn't asking for this key).
-	2. Run an Experiment that does query an index:
+	1. Run an Experiment that does not query an index. (Mimics a skewed workload).
+		1. See libraries that can generate skewed workloads, we don't focus on non-index/index. This is skewness in the query workload itself.
+		2. ~~We can check how many times we see keys in the load_balancer with the `tableName_index` in its key (Since we know the client isn't asking for this key).~~
+	3. Run an Experiment that does query an index:
 		1. This mimics a correlated query workload (since an index on a table is more likely to be access along with the table key/values). 
 		2. Calculate Alpha similar to how waffle does it. 
 4. Experiments on Obliviousness can reinforce the claim that our components on top of the oblivious data store do not compromise security and that waffle can handle multi-maps as stated in that paper. (Points on how this is an improvement upon pancake etc). 
 
 
-
-
 Other performance Experiments:
+* CockroadDB --> In Memory? Check memory footprint for processing it. 
+* Do CockroadDB memory footprint benchmark and take a look how it performs. 
+* Compare with memory footprint of the resolver. 
+* We have a bulky proxy, show that our processess aren't as bulky.
 
 1. Performance Benchmark of another Relational Database against our Resolver component:
 	1. General Goal: Our goal would be to understand how our resolver component compares against an existing database engine. 
@@ -1952,9 +1964,30 @@ Other performance Experiments:
 2. Single Query Breakdown: 
 	1. For each of the supported queries, we can breakdown how much of the latency is due to the network and how much due to our overhead. Argue about having edge deployments being more beneficial and can reduce latency.
 3. Scalability Benchmark:
-	1. Run benchmark described above, scaling # of executors in the system. Couple this with Changing R (Keeping workload the same). Discuss how scaling executor proxies can impact Alpha in our case. Example: If we add more executors, we have to wait for more requests to fill up executors (more bins than the system). To mitigate this, we can reduce R (the height of the bins). Changing R will impact executors (if we decide to keep R at executor and loadbalancer the same). Changing R will have an impact on Alpha. Do we reach an optimal point in terms of performance and security? 
+	1. Run benchmark described above, scaling # of executors in the system. Couple this with Changing R (Keeping workload the same). Discuss how scaling executor proxies can impact Alpha in our case. Example: If we add more executors, we have to wait for more requests to fill up executors (more bins than the system). To mitigate this, we can reduce R (the height of the bins). Changing R will impact executors (if we decide to keep R at executor and loadbalancer the same). Changing R will have an impact on Alpha. Do we reach an optimal point in terms of performance and security
+		1. Single Executor 
+		2. Then 2,4,6 and 8. 
 4. Proxy Cache impact on performance:
 	1. Depending on # of proxies, it is possible we cache the index for at-least $\beta$ accesses at the executor. Can we somehow measure the impact of this? 
+	2. Think of the cache as a different thing. We can skip this for now. 
+
 
  
+
+Tasks:
+1. Finishing Joins with Unit Tests. --> By Friday
+2. End to End testing --> Pick similar queries (randomly from each type (select,range,aggregate,join) and this still doesn't break anything). --> By Friday
+
+4. Replace plain-text with Waffle. --> Ping after spending 1-2 days on the hack and then see if you can implement waffle in go. 
+5. Running the Benchmark Client --> Start getting some realistic numbers. (Run on Tembo):
+	1. Resolver, Load Balancer on one machine. 
+	2. Executor on another machine
+	3. DB Store on third machine. 
+6. Performance Tuning:
+	1. For each of the processes (Resolver and Load Balancer). 
+	2. If we do wrapper approach, don't go into profiling executor. 
+	3. Memory footprint of the resolver. (5 GB Database Size). 
+7. Move on to Updates.
+
+
 
