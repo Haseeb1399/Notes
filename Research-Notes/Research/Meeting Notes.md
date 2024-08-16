@@ -1855,31 +1855,22 @@ Use that dataset and queries as a template and create selection function
 
 
 
-`SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?"` --> Aggregate over join
-`SELECT avg(rating) FROM review r WHERE r.i_id=?` --> Agg over point query
-
-`SELECT * FROM review r, item i WHERE i.i_id = r.i_id and r.i_id=?  ORDER BY rating DESC, r.creation_date DESC LIMIT 10;` --> Join query with an Order BY.
-
 `SELECT * FROM review r, useracct u WHERE u.u_id = r.u_id AND r.u_id=? ORDER BY rating DESC, r.creation_date DESC LIMIT 10` --> Join query with an Order BY
 Perf difference between the two joins (Maybe different table sizes?)
-As is
 
 
 
- -->Simple Selection with Order by
-Change this to --> `SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Range query on creation_date. (Add index on creation_date)
 
 
 Done: 
 
-`SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Trade off of range to point. 
-`SELECT avg(rating) FROM review r WHERE r.i_id=?`
-`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC`
+ `SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Range query on creation_date. (Add index on creation_date). Benchmark: Trade off of range to point. (Range DS vs conversion to point)
+`SELECT avg(rating) FROM review r WHERE r.i_id=?` --> Agg over point query
+`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC
+*Add Order By in Join*
+`SELECT * FROM review r, item i WHERE i.i_id = r.i_id and r.i_id=?  ORDER BY rating DESC, r.creation_date DESC LIMIT 10;` --> Join query with an Order BY. 
+`SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?"` --> Aggregate over join ()
 
-Do Next:
-
-
-//Finish up these joins with Join map, and then work on join with one item with index on the join column.
 
 Possible Benchmark:
 * Memory Benchmark of Postgres and our resolver program. Hopefully Memory footprint of resolver << Postgres (In Memory storage)
