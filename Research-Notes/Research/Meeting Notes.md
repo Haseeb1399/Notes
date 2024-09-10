@@ -1987,3 +1987,47 @@ Tasks:
 
 --> Average Latency per request. This needs to be measured. 
 
+### Sept 10
+
+* Benchbase distribution uniform or skewed:
+	* Distribution is created when data is loaded to the DB
+	* Uses a skewed distribution. (0.99 By default).
+	* Plot below shows that a smaller subset of users have the largest number of reviews in the table.
+![[Pasted image 20240910063645.png]]
+
+* How does BenchBase select values:
+	* Once data is loaded into into the DB, the benchmarking script reads the u_id and i_id columns from their respective tables.
+	* For the duration of the benchmark, it randomly picks values from these two arrays for the queries.
+
+* Conflicts in Queries:
+	* Selections: 
+		* Average(rating) from review table
+		* Average(rating) from review,trust table (Join with filters on both tables)
+		* Everything from review table (with filter) --> select * from review
+		* Everything from review, item (Join with filter) --> select * from review,item 
+		* Everything from review, useracct (Join with filter) --> select * from review,useracct
+
+	* Updates (With filters):
+		* Update title in item table. (UPDATE item SET title = ? WHERE i_id=?)
+		* Update rating in review table. (UPDATE review SET rating = ? WHERE i_id=? AND u_id=?)
+		* Update trust in trust table
+		* Update name in useracct table	
+
+Overlap b/w all selections and updates except useracct. 
+.
+* Test Cases for Update:
+	* Update single item without using an index --> Fetch value again to verify if update persisted.
+	* Update single item using an index --> Fetch value again to verify if update persisted.
+	* Update multiple items without an index
+	* Update multiple items using an index.
+
+Additionally we can test a subset of queries in the conflicts (Get,Put,Get), for example:
+
+* Average(Rating) before update --> Update table --> Average (Rating) after update. 
+
+For Concurrent Updates and Selections: 
+* Launch (Get,Put,Get) type of request concurrently (In random order). 
+* Record the order in which go routines were launched, for example (Get, Get, Put) or (Put, Get, Get) etc. 
+* Expect the same order back in responses (Since we linearize at resolver level).
+* Test over a long time-duration (10-30 seconds) since we want to make sure it's always correct. 
+
