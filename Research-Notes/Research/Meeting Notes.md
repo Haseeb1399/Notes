@@ -1853,8 +1853,6 @@ Convert tracefile to epinions database.
 Use that dataset and queries as a template and create selection function
 
 
-
-
 `SELECT * FROM review r, useracct u WHERE u.u_id = r.u_id AND r.u_id=? ORDER BY rating DESC, r.creation_date DESC LIMIT 10` --> Join query with an Order BY
 Perf difference between the two joins (Maybe different table sizes?)
 
@@ -1871,6 +1869,8 @@ Done:
 `SELECT * FROM review r, item i WHERE i.i_id = r.i_id and r.i_id=?  ORDER BY rating DESC, r.creation_date DESC LIMIT 10;` --> Join query with an Order BY. 
 `SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?"` --> Aggregate over join ()
 
+r.i_id = [1,2,3]
+source_u_id = [5,6,7]
 
 Possible Benchmark:
 * Memory Benchmark of Postgres and our resolver program. Hopefully Memory footprint of resolver << Postgres (In Memory storage)
@@ -1968,12 +1968,15 @@ Other performance Experiments:
 Tasks:
 1. Finishing Joins with Unit Tests. --> By Friday
 2. End to End testing --> Pick similar queries (randomly from each type (select,range,aggregate,join) and this still doesn't break anything). --> By Friday
+-- Done
+
 
 4. Replace plain-text with Waffle. --> Ping after spending 1-2 days on the hack and then see if you can implement waffle in go. 
 5. Running the Benchmark Client --> Start getting some realistic numbers. (Run on Tembo):
 	1. Resolver, Load Balancer on one machine. 
 	2. Executor on another machine
 	3. DB Store on third machine. 
+	4. Unit test for validity, For performance, Just issue and count completion. 
 6. Performance Tuning:
 	1. For each of the processes (Resolver and Load Balancer). 
 	2. If we do wrapper approach, don't go into profiling executor. 
@@ -1981,4 +1984,6 @@ Tasks:
 7. Move on to Updates.
 
 
+
+--> Average Latency per request. This needs to be measured. 
 
