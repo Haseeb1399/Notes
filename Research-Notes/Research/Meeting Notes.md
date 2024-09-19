@@ -1996,6 +1996,7 @@ Tasks:
 ![[Pasted image 20240910063645.png]]
 
 * How does BenchBase select values:
+	* Loading existing data and then picking values. Not randomly generate data. 
 	* Once data is loaded into into the DB, the benchmarking script reads the u_id and i_id columns from their respective tables.
 	* For the duration of the benchmark, it randomly picks values from these two arrays for the queries.
 
@@ -2006,6 +2007,14 @@ Tasks:
 		* Everything from review table (with filter) --> select * from review
 		* Everything from review, item (Join with filter) --> select * from review,item 
 		* Everything from review, useracct (Join with filter) --> select * from review,useracct
+
+ `SELECT * from review r where creation_date between <Day 1> and <Day 2> ` --> Range query on creation_date. (Add index on creation_date). Benchmark: Trade off of range to point. (Range DS vs conversion to point)
+`SELECT avg(rating) FROM review r WHERE r.i_id=?` --> Agg over point query
+`SELECT * FROM review r WHERE r.i_id=? ORDER BY creation_date DESC
+*Add Order By in Join*
+`SELECT * FROM review r, item i WHERE i.i_id = r.i_id and r.i_id=?  ORDER BY rating DESC, r.creation_date DESC LIMIT 10;` --> Join query with an Order BY. 
+`SELECT avg(rating) FROM review r, trust t WHERE r.u_id=t.target_u_id AND r.i_id=? AND t.source_u_id=?"` --> Aggregate over join ()
+
 
 	* Updates (With filters):
 		* Update title in item table. (UPDATE item SET title = ? WHERE i_id=?)
@@ -2031,3 +2040,9 @@ For Concurrent Updates and Selections:
 * Expect the same order back in responses (Since we linearize at resolver level).
 * Test over a long time-duration (10-30 seconds) since we want to make sure it's always correct. 
 
+
+
+
+Test: 
+* Test Select * vs Select on a single column.
+* 
