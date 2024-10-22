@@ -69,8 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "1d6e41c5bdb2e191",
@@ -155,8 +154,12 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "8909dc3d46afbb30",
+  "active": "dd0f1bc87146a84e",
   "lastOpenFiles": [
+    "EmploymentSessions/Amazon Robotics.md",
+    "Research/Meeting Notes.md",
+    "Untitled",
+    "EmploymentSessions",
     "Pasted image 20240910063645.png",
     "Research/Untitled.canvas",
     "Images/Screenshot from 2024-05-15 23-20-46.png",
@@ -164,7 +167,6 @@
     "Images/Screenshot from 2024-04-23 21-45-40.png",
     "Images/Screenshot from 2024-04-23 19-03-57.png",
     "Images/Pasted image 20240624105115.png",
-    "Research/Meeting Notes.md",
     "Research/SSE.md",
     "Research/Coding ToDos.md",
     "conflict-files-obsidian-git.md",
@@ -173,7 +175,6 @@
     "Screenshot from 2024-05-15 23-20-13.png",
     "flamegraph.svg",
     "Screenshot from 2024-04-23 21-45-40.png",
-    "Screenshot from 2024-04-23 19-03-57.png",
     "Winter 2024/Project CS 848.md",
     "Research/Leakage suppressed Encrypted Keyword Queries over Multiple Cloud Servers.md",
     "Winter 2024/Slides.md",

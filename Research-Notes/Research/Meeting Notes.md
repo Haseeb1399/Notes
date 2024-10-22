@@ -2045,4 +2045,82 @@ For Concurrent Updates and Selections:
 
 Test: 
 * Test Select * vs Select on a single column.
-* 
+
+
+
+##### Batching
+
+In order to do batching:
+1. Modify the ExecuteBatch RPC in the resolver to accept a query and add it to a queue. The RPC will return/exit once the query is added to the queue.
+2. Within the resolver, devise an epoch based mechanism to fulfill requests in a batch. Once the time interval for the epoch is met, forward the type of query (select, aggregate, join, average) to the appropriate thread responsible for handling those requests (there will be 4 such threads, one for each type of operation). 
+3. Modify the functions (doSelect, doAggregate, doUpdate, doJoin) to accept a list of queries, instead of accepting a single query. Update helper functions to reduce redundant information retrieval for query completion. For example, if two requests are indexing on the same values, fetch it once rather than twice. 
+4. Setup a reverse connection (between resolver and client). Send the responses back to the client via this connection/channel. 
+
+
+
+LB:
+
+* Remove waffle related parameters from the load-balancer. 
+* R in LB need not be the same R in waffle. 
+* Remove the timeout function as it's confusing. 
+* Don't use timeouts in the checking for executor clients. Instead use a thread pool for the clients to perform the executions. This way reduces the timeout and try locking we are doing. 
+* Improving locking across the maps and everything associated with it. 
+* Only batching updates, handle the requests within a batch concurrently. Single thread that does one batch at a time. 
+* Explore that if we push the version cache to the executors.
+* You should never be blocked on adding because of someone else isn't popping. 
+* Remove coordination between someone whos adding and someone whos removing keys. 
+* Improve the clients by using thread pools. 
+
+
+
+#### Oct 22
+
+Experiments:
+
+Aim to answer the following questions through evaluations: 
+1. How does our system compare against a plaintext counter-part? (Cost of privacy). How does our system compare against other oblivious k/v stores (Optimized ORAM) in the optimal case (indexes and join maps).
+	1. Experiment: 
+		1. All queries (Selections, Joins, Ranges and Aggregates) 
+		2. Waffle vs ORAM vs PlainText Performance (Queries/second)
+2. How does our system scale as we add more resources at the executor level?
+	1. Experiment:
+		1. All queries. 
+		2. Increase oblivious proxy from 1 to 4. 
+		3. Record for ORAM and Waffle.
+	
+3. Impact of indexing:
+	1. Generally want to answer: Is it worth doing 2 RTT for the index + values instead of fetching the entire column?
+	2. Point: Increasing table size, impact of indexing
+	4. Range: Increase size of the range, ideally our indexing is better for smaller/specific ranges
+	5. Range: Skew'd range, show an impact for Bloom Filter? (More Skew --> Bloom filter can filter out more values, better performance)
+
+
+4. Impact of indexes and join maps on performance? (Storage vs Performance)
+	1. Table shows the sizes of the MetaData we keep on client side that is for index information. 
+	2. Table showing size of join map we have for a table along with the size of the tables themselves (# of Rows)
+	3. Experiment:
+		1. Shows the performance if we keep join-map local vs offloaded to the server
+
+The above experiments we can do for both ORAM and Waffle. 
+
+This we do only for Waffle: 
+5. Impact of Security Parameters on Performance
+	1. Adjust the Waffle Parameters (B,R,Cache Size etc) to see what impact it has on performance 
+	2. Show Alpha values for tables with uniform and skewed distributions. Ideally we should see a similar graph. This can be used to showcase the fact that waffle can be used for multi-map/relation data. 
+
+
+Other minor experiments:
+
+* Select * vs Select `<col_name>`
+* Other datasets we want to work on? (We also have Berkley big data benchmark)
+
+
+For updates: 
+https://github.com/cmu-db/benchbase/wiki/SIBench
+https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/sibench/procedures/UpdateRecord.java
+
+YCSB
+https://github.com/cmu-db/benchbase/blob/main/src/main/java/com/oltpbenchmark/benchmarks/ycsb/procedures/UpdateRecord.java
+
+Only do ReadRecord, ScanRecord, UpdateRecord and ReadModifyWriteRecord
+
